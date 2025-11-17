@@ -567,4 +567,4 @@ app.listen(PORT, () => {
     console.log('  GET      /api/v1/master/fields - フィールド取得');
     console.log('  GET      /api/v1/master/params - パラメータ取得');
     console.log('  POST     /api/v1/master/getrecords - レコード取得');
-});
+    console.log('  GET      /api/v1/getselect - サンプル選択肢取得');});
