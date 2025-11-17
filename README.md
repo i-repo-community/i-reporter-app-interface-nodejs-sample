@@ -17,35 +17,8 @@ i-Reporter App Interfaceを活用したNode.jsのサンプルです。
 - `GET /api/v1/getselect`     - 選択肢取得
 - `POST /api/v1/master/getrecords` - レコード検索・取得
 
-## 🚀 Azureへのデプロイ
-
-### 方法1: デプロイボタンを使用（推奨）
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.AppService/WebAppFromGitHub/repo/https%3A%2F%2Fgithub.com%2Fi-repo-community%2Fi-reporter-app-interface-sample.git)
-
-### 方法2: Azure Portalから手動でデプロイ
-
-1. [Azure Portal](https://portal.azure.com)にログイン
-2. 「App Services」→「作成」をクリック
-3. 「デプロイ」タブで「GitHub」を選択
-4. リポジトリ: `i-repo-community/i-reporter-app-interface-sample` を選択
-5. ブランチ: `main` を選択
-6. その他の設定を完了してデプロイを開始
-
-### デプロイ時の設定
-
-- **リポジトリ**: `https://github.com/i-repo-community/i-reporter-app-interface-sample.git`（自動入力されます）
-- **ブランチ**: `main` を選択
-- **ランタイムスタック**: Node.js を選択
-- **環境変数**: 以下の環境変数を設定してください：
-  - `API_TOKEN`: 認証用トークン（例: `gateway-pass`）
-  - `PORT`: ポート番号（通常は自動設定されます）
-
-**注意**: デプロイ前に、Azure PortalでGitHubアカウントへのアクセス権限を付与する必要があります。
 
 ## ローカル開発
-
-
 
 2. 依存関係をインストール:
 ```bash
