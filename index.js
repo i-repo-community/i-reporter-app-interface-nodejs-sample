@@ -56,7 +56,7 @@ function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
+        return res.status(200).json({
             result: {
                 code: -1,
                 description: "認証が必要です"
@@ -66,7 +66,7 @@ function authenticate(req, res, next) {
 
     const token = authHeader.substring(7);
     if (token !== API_TOKEN) {
-        return res.status(403).json({
+        return res.status(200).json({
             result: {
                 code: -1,
                 description: "無効なトークンです"
@@ -98,7 +98,7 @@ app.use(authenticate);
  * - req.files[0].buffer でファイルデータ取得
  * - req.body.data でテキストデータ取得
  */
-app.all('/api/getValue', upload.any(), (req, res) => {
+app.all('/api/v1/getValue', upload.any(), (req, res) => {
     const queryParams = req.query;
     const body = req.body;
 
@@ -169,29 +169,129 @@ app.all('/api/getValue', upload.any(), (req, res) => {
         });
     }
 
-    res.json({
+    // plc_idに基づいて異なるデータを返す
+    const plcId = queryParams.plc_id || body.plc_id;
+    
+    let applyData;
+    if (plcId === 'PLCB') {
+        // PLCBの場合のデータ
+        applyData = [
+            {
+                item: "sample-humidity",
+                sheet: 1,
+                cluster: 1,
+                type: "string",
+                value: "65.8"
+            },
+            {
+                item: "sample-spin",
+                sheet: 1,
+                cluster: 2,
+                type: "string",
+                value: "6500"
+            },
+            {
+                item: "sample-input-amount",
+                sheet: 1,
+                cluster: 3,
+                type: "string",
+                value: "1500"
+            },
+            {
+                item: "sample-production-quantity",
+                sheet: 1,
+                cluster: 4,
+                type: "string",
+                value: "750"
+            }
+        ];
+    } else {
+        // PLCAまたは指定なしの場合のデータ（デフォルト）
+        applyData = [
+            {
+                item: "sample-humidity",
+                sheet: 1,
+                cluster: 1,
+                type: "string",
+                value: "50.4"
+            },
+            {
+                item: "sample-spin",
+                sheet: 1,
+                cluster: 2,
+                type: "string",
+                value: "5000"
+            },
+            {
+                item: "sample-input-amount",
+                sheet: 1,
+                cluster: 3,
+                type: "string",
+                value: "1000"
+            },
+            {
+                item: "sample-production-quantity",
+                sheet: 1,
+                cluster: 4,
+                type: "string",
+                value: "500"
+            }
+        ];
+    }
+
+    const reponse = {
         result: {
             code: 0,
             description: "データ取得成功"
         },
+        apply: applyData
+    };
+    console.log('Response:', reponse);
+
+    res.json(reponse);
+});
+
+
+app.get('/api/v1/getselect', (req, res) => {
+
+
+    res.json({
+        result: {
+            code: 0,
+            description: "選択肢設定完了"
+        },
         apply: [
             {
-                item: "sample-date",
+                item: "plca-select",
                 sheet: 1,
-                cluster: 1,
-                type: "string",
-                value: "2025/12/31"
+                cluster: 18,
+                type: "SetItemsToSelect",
+                value: "PLCA",
+                selectItems: [
+                    {
+                        item: "PLCA",
+                        label: "設備 PLC-A",
+                        selected: true
+                    },
+                    { 
+                        item: "PLCB",
+                        label: "設備 PLC-B",
+                        selected: false
+                    }
+                ]
             }
         ]
     });
-});
+}
+
+);
 
 /**
  * カスタムマスターのフィールド取得
- * @route GET /api/master/fields
+ * @route GET /api/v1/master/fields
  * @returns {Object} フィールド定義の配列を含むJSONレスポンス
  */
-app.get('/api/master/fields', (req, res) => {
+app.get('/api/v1/master/fields', (req, res) => {
     console.log('getFields - Query:', req.query);
 
     res.json({
@@ -248,10 +348,10 @@ app.get('/api/master/fields', (req, res) => {
 
 /**
  * カスタムマスターのパラメータ取得
- * @route GET /api/master/params
+ * @route GET /api/v1/master/params
  * @returns {Object} パラメータ定義の配列を含むJSONレスポンス
  */
-app.get('/api/master/params', (req, res) => {
+app.get('/api/v1/master/params', (req, res) => {
     console.log('getParams - Query:', req.query);
 
     res.json({
@@ -270,7 +370,7 @@ app.get('/api/master/params', (req, res) => {
 
 /**
  * カスタムマスターのレコード取得
- * @route POST /api/master/getrecords
+ * @route POST /api/v1/master/getrecords
  * @param {Object} req.body.data - JSON文字列（clusters配列を含む）
  * @param {Array} req.body.data.clusters - フィルタ条件の配列
  * @param {string} req.body.data.clusters[].parameter - フィルタするフィールド名
@@ -283,7 +383,7 @@ app.get('/api/master/params', (req, res) => {
  *   data: '{"clusters": [{"parameter": "product_id", "value": "1001"}]}'
  * }
  */
-app.post('/api/master/getrecords', upload.any(), (req, res) => {
+app.post('/api/v1/master/getrecords', upload.any(), (req, res) => {
     console.log('getRecords - Body:', req.body);
 
     // リクエストボディからパラメータを抽出
@@ -463,8 +563,8 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
     console.log(`API Token: ${API_TOKEN}`);
     console.log('\nAvailable endpoints:');
-    console.log('  GET/POST /api/getValue - 通常の値取得');
-    console.log('  GET      /api/master/fields - フィールド取得');
-    console.log('  GET      /api/master/params - パラメータ取得');
-    console.log('  POST     /api/master/getrecords - レコード取得');
+    console.log('  GET/POST /api/v1/getValue - 通常の値取得');
+    console.log('  GET      /api/v1/master/fields - フィールド取得');
+    console.log('  GET      /api/v1/master/params - パラメータ取得');
+    console.log('  POST     /api/v1/master/getrecords - レコード取得');
 });
