@@ -1,0 +1,1569 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>i-Reporter App Interface — 仕様書</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-2:#ffffff;
+    --bg-3:#f5f5f5;
+    --fg:#000000;
+    --fg-dim:#000000;
+    --fg-dim-2:#000000;
+    --line:rgba(0,0,0,0.10);
+    --line-2:rgba(0,0,0,0.20);
+    --accent:#0071e3;
+    --accent-dim:rgba(0,113,227,0.10);
+    --success:#1a7f3e;
+    --warn:#b36b00;
+    --danger:#c0362c;
+    --jp:"Noto Sans JP","Hiragino Kaku Gothic ProN","ヒラギノ角ゴ ProN W3",sans-serif;
+    --en:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--fg);
+    font-family:var(--jp),var(--en);
+    font-weight:400;letter-spacing:.01em;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    padding:18px 32px;display:flex;align-items:center;justify-content:space-between;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    background:rgba(255,255,255,0.72);
+    border-bottom:1px solid transparent;
+    transition:border-color .4s ease, background .4s ease;
+    font-size:13px;
+  }
+  .nav.scrolled{border-bottom-color:var(--line);background:rgba(255,255,255,0.92)}
+  .nav .brand{display:flex;align-items:center;gap:10px;font-family:var(--en);font-weight:600;letter-spacing:.02em}
+  .nav .brand .mark{width:22px;height:22px;border-radius:6px;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-size:12px;font-weight:700}
+  .nav .links{display:flex;gap:28px;color:var(--fg-dim);font-size:12px;letter-spacing:.04em}
+  .nav .links a{text-decoration:none;transition:color .2s}
+  .nav .links a:hover{color:var(--fg)}
+  .nav .cta{font-family:var(--en);font-size:12px;padding:8px 14px;border:1px solid var(--line-2);border-radius:999px;color:var(--fg);background:transparent;cursor:pointer;transition:all .2s}
+  .nav .cta:hover{background:var(--fg);color:var(--bg)}
+
+  /* ---------- PROGRESS ---------- */
+  .progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:101;pointer-events:none}
+  .progress .bar{height:100%;width:0;background:var(--accent);transition:width .1s linear;box-shadow:0 0 12px var(--accent)}
+
+  /* ---------- SECTION BASE ---------- */
+  section{position:relative;padding:160px 32px;max-width:none}
+  .container{max-width:1120px;margin:0 auto}
+  .eyebrow{
+    font-family:var(--en);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:20px;
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:24px;height:1px;background:var(--accent)}
+  h1,h2,h3,h4{font-weight:500;letter-spacing:-.02em;margin:0}
+  h1{font-size:clamp(44px,7vw,104px);line-height:1.02;font-weight:600}
+  h2{font-size:clamp(36px,4.6vw,64px);line-height:1.06;font-weight:500}
+  h3{font-size:clamp(22px,2vw,30px);line-height:1.2;font-weight:500}
+  p{color:var(--fg);line-height:1.72;font-size:16px;margin:0;font-weight:400}
+  p.lead{font-size:20px;line-height:1.6;color:var(--fg);font-weight:300;max-width:820px}
+
+  /* ---------- REVEAL ---------- */
+  .reveal{opacity:0;transform:translateY(32px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.1s}
+  .reveal.d2{transition-delay:.22s}
+  .reveal.d3{transition-delay:.34s}
+  .reveal.d4{transition-delay:.46s}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100vh;padding-top:180px;padding-bottom:120px;
+    display:flex;flex-direction:column;justify-content:center;
+    overflow:hidden;
+  }
+  .hero-grid{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:80px 80px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 40%,black 30%,transparent 80%);
+    -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 40%,black 30%,transparent 80%);
+    opacity:.7;
+  }
+  .hero-halo{
+    position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);
+    width:1100px;height:1100px;border-radius:50%;
+    background:conic-gradient(from 0deg,rgba(0,113,227,0.18),rgba(175,82,222,0.14),rgba(255,149,0,0.14),rgba(52,199,89,0.14),rgba(0,113,227,0.18));
+    filter:blur(80px);opacity:.7;z-index:0;pointer-events:none;
+    animation:haloSpin 40s linear infinite;
+  }
+  @keyframes haloSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .hero .container{position:relative;z-index:1}
+  .hero .meta{display:flex;gap:28px;color:var(--fg-dim-2);font-family:var(--en);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:48px}
+  .hero .meta span{display:flex;align-items:center;gap:8px}
+  .hero .meta .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .hero h1 .jp{display:block;font-family:var(--jp);font-weight:500;font-size:.42em;color:var(--fg-dim);letter-spacing:0;margin-bottom:28px}
+  .hero h1 em{font-style:normal;background:linear-gradient(135deg,#0071e3 0%,#af52de 50%,#ff9500 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero-sub{margin-top:40px;display:grid;grid-template-columns:1fr auto;align-items:end;gap:40px}
+  .hero-sub p{max-width:640px}
+  .scroll-hint{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--fg-dim-2);font-family:var(--en);font-size:10px;letter-spacing:.3em;text-transform:uppercase}
+  .scroll-hint .line{width:1px;height:60px;background:linear-gradient(180deg,transparent,var(--fg-dim-2),transparent);position:relative;overflow:hidden}
+  .scroll-hint .line::after{content:"";position:absolute;top:-20px;left:0;width:100%;height:20px;background:var(--accent);animation:scrollLine 2.2s ease-in-out infinite}
+  @keyframes scrollLine{0%{top:-20px}100%{top:60px}}
+
+  /* ---------- SECTION HEADER ---------- */
+  .sec-head{margin-bottom:80px;max-width:900px}
+  .sec-num{font-family:var(--en);font-size:12px;color:var(--fg-dim-2);letter-spacing:.3em;margin-bottom:16px;display:block}
+
+  /* ---------- DIAGRAM ---------- */
+  .diagram{
+    margin-top:80px;
+    background:var(--bg-2);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:64px 48px;
+    position:relative;overflow:hidden;
+  }
+  .diagram::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 20% 20%,var(--accent-dim) 0%,transparent 40%),
+      radial-gradient(circle at 80% 80%,oklch(0.78 0.12 300 / 0.1) 0%,transparent 40%);
+    pointer-events:none;
+  }
+  .flow{
+    position:relative;z-index:1;
+    display:grid;grid-template-columns:1fr auto 1fr auto 1fr;
+    align-items:center;gap:24px;
+  }
+  .flow-node{
+    padding:28px 24px;border-radius:14px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid var(--line-2);
+    text-align:center;
+    backdrop-filter:blur(10px);
+    transition:transform .4s, border-color .4s;
+  }
+  .flow-node.active{border-color:var(--accent);transform:translateY(-4px)}
+  .flow-node .icon{width:44px;height:44px;margin:0 auto 14px;border-radius:10px;background:var(--bg-3);display:grid;place-items:center;font-family:var(--en);font-weight:600;color:var(--accent);font-size:18px;border:1px solid var(--line-2)}
+  .flow-node h4{font-size:16px;font-weight:500;margin-bottom:6px}
+  .flow-node small{font-family:var(--en);font-size:11px;color:var(--fg-dim-2);letter-spacing:.1em;text-transform:uppercase}
+  .flow-arrow{position:relative;height:2px;background:var(--line-2);min-width:40px}
+  .flow-arrow::after{content:"";position:absolute;right:-1px;top:50%;transform:translateY(-50%);width:8px;height:8px;border-top:2px solid var(--line-2);border-right:2px solid var(--line-2);rotate:45deg}
+  .flow-arrow .pulse{position:absolute;top:-2px;left:0;width:30px;height:6px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);filter:blur(3px);animation:flowPulse 3s linear infinite}
+  @keyframes flowPulse{0%{left:-30px}100%{left:100%}}
+
+  /* ---------- COMPARE ---------- */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:64px}
+  .card{
+    background:var(--bg-2);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:40px;
+    position:relative;overflow:hidden;
+    transition:border-color .4s, transform .4s;
+  }
+  .card:hover{border-color:var(--line-2);transform:translateY(-2px)}
+  .card .tag{font-family:var(--en);font-size:11px;letter-spacing:.2em;color:var(--fg-dim-2);text-transform:uppercase;margin-bottom:20px}
+  .card h3{margin-bottom:16px}
+  .card ul{list-style:none;padding:0;margin:24px 0 0;display:flex;flex-direction:column;gap:14px}
+  .card li{display:grid;grid-template-columns:72px 1fr;gap:16px;padding:14px 0;border-top:1px solid var(--line);color:var(--fg-dim);font-size:14px;line-height:1.6}
+  .card li .k{font-family:var(--en);font-size:10px;letter-spacing:.2em;color:var(--fg);text-transform:uppercase;padding-top:3px}
+  .card.primary{background:linear-gradient(180deg,rgba(120,180,255,0.04),rgba(120,180,255,0) 60%),var(--bg-2);border-color:rgba(120,180,255,0.18)}
+  .card.primary .tag{color:var(--accent)}
+
+  /* ---------- CODE ---------- */
+  .code-block{
+    background:#2b2a26;
+    border:1px solid var(--line-2);
+    border-radius:14px;
+    font-family:var(--mono);font-size:13px;line-height:1.72;
+    overflow:hidden;
+    position:relative;
+    color:#f2efe6;
+  }
+  .code-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03)}
+  .code-head .dots{display:flex;gap:6px}
+  .code-head .dots i{width:10px;height:10px;border-radius:50%;background:#5a5850}
+  .code-head .lang{font-family:var(--en);font-size:10px;letter-spacing:.25em;color:#9a9890;text-transform:uppercase}
+  .code-head-left{display:flex;align-items:center;gap:14px}
+  .code-copy-btn{font-family:var(--jp),var(--en);font-size:12px;font-weight:500;padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#f2efe6;cursor:pointer;transition:background .2s,border-color .2s}
+  .code-copy-btn:hover{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.35)}
+  .code-copy-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .code-body{padding:22px 26px;overflow-x:auto;white-space:pre}
+  .code-body .kw{color:#f5b84a}
+  .code-body .str{color:#9ddc8b}
+  .code-body .num{color:#ffb085}
+  .code-body .key{color:#7cc4e8}
+  .code-body .cm{color:#9a9890;font-style:italic}
+  .code-body .hl{background:rgba(232,116,60,0.18);display:block;margin:0 -26px;padding:0 26px}
+
+  /* ---------- TWO COL ---------- */
+  .two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:56px;align-items:start}
+  .two-col .copy{position:sticky;top:120px}
+  .two-col .copy .eyebrow{margin-bottom:14px}
+
+  /* ---------- TYPE TABLE ---------- */
+  .types{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
+  .type-card{
+    background:var(--bg-2);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:28px 24px 24px;
+    position:relative;overflow:hidden;
+    transition:all .5s cubic-bezier(.2,.7,.2,1);
+  }
+  .type-card:hover{border-color:var(--accent);transform:translateY(-4px)}
+  .type-card .n{font-family:var(--en);font-size:11px;letter-spacing:.2em;color:var(--fg-dim-2);margin-bottom:18px}
+  .type-card .name{font-family:var(--mono);font-size:18px;color:var(--fg);font-weight:500;margin-bottom:10px}
+  .type-card .desc{font-size:13px;color:var(--fg-dim);line-height:1.6;margin-bottom:18px;min-height:42px}
+  .type-card .ex{font-family:var(--mono);font-size:11px;color:var(--accent);padding-top:16px;border-top:1px solid var(--line);word-break:break-all}
+  .type-card::after{
+    content:"";position:absolute;top:0;right:0;width:80px;height:80px;
+    background:radial-gradient(circle at top right,var(--accent-dim),transparent 70%);
+    opacity:0;transition:opacity .5s;
+  }
+  .type-card:hover::after{opacity:1}
+
+  /* ---------- EXAMPLE SHOWCASE ---------- */
+  .example{
+    display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.3fr);
+    gap:56px;align-items:start;margin-bottom:140px;
+  }
+  .example:last-child{margin-bottom:0}
+  .example .label{font-family:var(--en);font-size:11px;letter-spacing:.28em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+  .example h3{margin-bottom:20px}
+  .example .desc{color:var(--fg-dim);margin-bottom:28px;line-height:1.7}
+  .example .hint{
+    margin-top:20px;padding:14px 18px;
+    background:rgba(120,200,140,0.06);
+    border:1px solid oklch(0.78 0.13 155 / 0.2);
+    border-left:2px solid var(--success);
+    border-radius:8px;font-size:13px;color:var(--fg);
+  }
+  .example .hint.warn{background:rgba(240,180,90,0.06);border-color:oklch(0.82 0.13 75 / 0.2);border-left-color:var(--warn)}
+
+  /* Mock preview for examples */
+  .preview{
+    background:var(--bg-2);border:1px solid var(--line);
+    border-radius:14px;padding:20px;margin-top:24px;
+    font-family:var(--mono);font-size:12px;
+  }
+  .preview .row{display:grid;grid-template-columns:90px 1fr;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line);align-items:center}
+  .preview .row:last-child{border-bottom:0}
+  .preview .row .k{color:var(--fg-dim-2);font-size:11px;letter-spacing:.1em}
+  .preview .row .v{color:var(--fg)}
+  .preview .row .v .chip{display:inline-block;padding:2px 8px;background:var(--accent-dim);border:1px solid oklch(0.78 0.12 240 / 0.3);color:var(--accent);border-radius:999px;font-size:10px;margin-right:8px;letter-spacing:.05em}
+
+  /* Image placeholder (red square from example 2) */
+  .img-placeholder{
+    margin-top:18px;
+    width:120px;height:120px;
+    background:
+      repeating-linear-gradient(45deg,
+        oklch(0.72 0.17 25) 0 12px,
+        oklch(0.65 0.17 25) 12px 24px);
+    border-radius:8px;border:1px solid var(--line-2);
+    display:grid;place-items:center;
+    font-family:var(--mono);font-size:10px;color:#fff;letter-spacing:.1em;
+  }
+
+  /* Focus ring (example 4) */
+  .focus-mock{
+    margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  }
+  .focus-mock .cell{
+    aspect-ratio:16/9;border:1px solid var(--line-2);border-radius:6px;
+    background:var(--bg-3);
+    display:grid;place-items:center;
+    font-family:var(--mono);font-size:10px;color:var(--fg-dim-2);
+    position:relative;
+  }
+  .focus-mock .cell.on{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-dim),0 0 24px var(--accent-dim);
+    color:var(--accent);
+    animation:focusBlink 2.2s ease-in-out infinite;
+  }
+  @keyframes focusBlink{0%,100%{box-shadow:0 0 0 3px var(--accent-dim),0 0 24px var(--accent-dim)}50%{box-shadow:0 0 0 3px oklch(0.78 0.12 240 / 0.35),0 0 40px oklch(0.78 0.12 240 / 0.4)}}
+
+  /* Select (example 5) */
+  .sel-mock{margin-top:18px;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .sel-mock .head{padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--fg-dim-2);border-bottom:1px solid var(--line);letter-spacing:.1em}
+  .sel-mock .opt{padding:14px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);font-size:13px}
+  .sel-mock .opt:last-child{border-bottom:0}
+  .sel-mock .radio{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--fg-dim-2);position:relative;flex:none}
+  .sel-mock .opt.on .radio{border-color:var(--accent)}
+  .sel-mock .opt.on .radio::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+  .sel-mock .opt.on{color:var(--fg)}
+  .sel-mock .opt:not(.on){color:var(--fg-dim)}
+
+  /* ---------- STAT / BANDS ---------- */
+  .bands{margin-top:80px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .bands .b{padding:36px 24px;border-right:1px solid var(--line)}
+  .bands .b:last-child{border-right:0}
+  .bands .b .num{font-family:var(--en);font-size:44px;font-weight:600;letter-spacing:-.03em;margin-bottom:8px;color:var(--fg)}
+  .bands .b .lbl{font-family:var(--en);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-dim-2)}
+
+  /* ---------- FIELD TABLE ---------- */
+  .field-types{margin-top:48px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .field-types .ft{padding:20px 18px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;transition:all .4s}
+  .field-types .ft:hover{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-dim),transparent 80%),var(--bg-2)}
+  .field-types .ft .t{font-family:var(--mono);font-size:14px;color:var(--accent);margin-bottom:6px}
+  .field-types .ft .d{font-size:12px;color:var(--fg-dim)}
+
+  /* ---------- NOTES / PITFALLS ---------- */
+  .notes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+  .note{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:16px;
+    padding:28px 24px;
+    position:relative;
+  }
+  .note .n{font-family:var(--en);font-size:11px;letter-spacing:.25em;color:var(--fg-dim-2);margin-bottom:14px;text-transform:uppercase}
+  .note h4{font-size:17px;font-weight:500;margin-bottom:10px;line-height:1.4}
+  .note p{font-size:13px;line-height:1.65}
+  .note code{font-family:var(--mono);font-size:12px;padding:1px 6px;background:var(--bg-3);border-radius:4px;color:var(--accent);border:1px solid var(--line)}
+
+  /* ---------- TOOL CTA ---------- */
+  .tool{
+    margin-top:80px;padding:64px 48px;
+    background:
+      radial-gradient(circle at 80% 0%,var(--accent-dim),transparent 50%),
+      var(--bg-2);
+    border:1px solid var(--line);border-radius:24px;
+    display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:center;
+    position:relative;overflow:hidden;
+  }
+  .tool h3{font-size:32px;margin-bottom:16px;font-weight:500}
+  .tool p{margin-bottom:28px}
+  .tool .how{counter-reset:step;list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  .tool .how li{counter-increment:step;display:grid;grid-template-columns:32px 1fr;gap:14px;font-size:14px;color:var(--fg-dim);padding:10px 0;border-top:1px solid var(--line)}
+  .tool .how li::before{content:counter(step,decimal-leading-zero);font-family:var(--en);font-size:11px;color:var(--accent);letter-spacing:.1em;padding-top:2px}
+  .tool .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;background:var(--fg);color:var(--bg);border-radius:999px;text-decoration:none;font-family:var(--en);font-size:14px;font-weight:500;transition:transform .25s}
+  .tool .btn:hover{transform:translateY(-2px)}
+  .tool .btn .arr{font-size:16px;transition:transform .25s}
+  .tool .btn:hover .arr{transform:translate(3px,-3px)}
+  .tool-visual{
+    background:#2b2a26;color:#f2efe6;border:1px solid var(--line-2);border-radius:16px;padding:20px;font-family:var(--mono);font-size:11px;
+  }
+  .tool-visual .line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.1);color:#c9c7bf}
+  .tool-visual .line:last-child{border-bottom:0}
+  .tool-visual .ok{color:var(--success)}
+  .tool-visual .badge{padding:10px 14px;background:rgba(120,200,140,0.08);border:1px solid oklch(0.78 0.13 155 / 0.25);border-radius:8px;color:var(--success);margin-top:16px;display:inline-flex;align-items:center;gap:10px}
+  .tool-visual .badge::before{content:"";width:8px;height:8px;background:var(--success);border-radius:50%;box-shadow:0 0 12px var(--success)}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:80px 32px 48px;border-top:1px solid var(--line);background:var(--bg-2)}
+  footer .container{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px}
+  footer .brand{font-family:var(--en);font-weight:600;font-size:18px;margin-bottom:10px}
+  footer small{color:var(--fg-dim-2);font-size:12px;line-height:1.7}
+  footer h5{font-family:var(--en);font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--fg-dim-2);margin:0 0 16px}
+  footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+  footer ul a{color:var(--fg-dim);text-decoration:none;font-size:14px;transition:color .2s}
+  footer ul a:hover{color:var(--fg)}
+  .copy-line{margin-top:48px;padding-top:24px;border-top:1px solid var(--line);font-family:var(--en);font-size:11px;color:var(--fg-dim-2);letter-spacing:.15em;text-transform:uppercase;display:flex;justify-content:space-between}
+
+  /* ---------- STICKY CODE STAGE (response structure) ---------- */
+  .stage{position:relative;min-height:280vh}
+  .stage-sticky{position:sticky;top:80px;height:100vh;display:flex;align-items:center;padding:40px 0}
+  .stage-inner{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  .stage-copy h2{margin-bottom:24px}
+  .stage-steps{position:absolute;inset:0;pointer-events:none}
+  .stage-step{height:100vh;pointer-events:auto}
+
+  /* Highlight row in structure code */
+  .struct-line{display:block;padding:0 26px;margin:0 -26px;transition:background .4s}
+  .struct-line.active{background:linear-gradient(90deg,var(--accent-dim),transparent 80%);box-shadow:inset 2px 0 0 var(--accent)}
+
+  /* ---------- TALK NARRATIVE ---------- */
+  .intro-card{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:40px;
+  }
+  .intro-grid{display:grid;grid-template-columns:auto 1fr auto;gap:40px;align-items:center}
+  .intro-avatar{width:96px;height:96px;border-radius:22px;background:linear-gradient(135deg,var(--accent),oklch(0.72 0.14 280));display:grid;place-items:center;color:#0a0a0b;font-family:var(--en);font-weight:700;font-size:34px;letter-spacing:-.02em}
+  .intro-name{font-size:22px;font-weight:500;color:var(--fg)}
+  .intro-role{font-family:var(--en);font-size:13px;color:var(--fg-dim-2);letter-spacing:.15em;text-transform:uppercase;margin-top:4px}
+  .intro-stats{display:flex;flex-direction:column;gap:10px;border-left:1px solid var(--line);padding-left:32px}
+  .intro-stats div{display:flex;flex-direction:column;gap:2px}
+  .intro-stats .n{font-family:var(--en);font-size:10px;letter-spacing:.25em;color:var(--fg-dim-2);text-transform:uppercase}
+  .intro-stats .v{font-size:14px;color:var(--fg)}
+
+  .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px}
+  .pain{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;transition:border-color .4s}
+  .pain:hover{border-color:var(--danger)}
+  .pain-num{font-family:var(--en);font-size:11px;letter-spacing:.25em;color:var(--danger);margin-bottom:16px}
+  .pain h3{font-size:20px;font-weight:500;margin-bottom:12px;line-height:1.35}
+  .pain p{font-size:14px;line-height:1.7}
+  .pain::after{content:"";position:absolute;top:0;left:0;width:2px;height:0;background:var(--danger);transition:height .5s}
+  .pain:hover::after{height:100%}
+
+  .twist{padding:80px 20px;text-align:center;max-width:1000px;margin:0 auto}
+  .twist-lead{font-size:clamp(22px,2.6vw,34px);font-weight:300;color:var(--fg);line-height:1.45;margin-bottom:28px}
+  .twist-lead em{font-style:normal;color:var(--fg-dim-2);text-decoration:line-through;text-decoration-color:var(--danger);text-decoration-thickness:2px}
+  .twist-big{
+    font-family:var(--en);font-weight:700;font-size:clamp(120px,22vw,280px);line-height:.92;letter-spacing:-.04em;
+    background:linear-gradient(180deg,var(--fg) 0%,var(--accent) 65%,oklch(0.78 0.12 240 / 0.2) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    padding:10px 0 20px;
+    filter:drop-shadow(0 20px 60px var(--accent-dim));
+  }
+  .twist-big .blink{color:var(--accent);-webkit-text-fill-color:var(--accent);animation:blinkCaret 1.1s steps(2) infinite;margin-left:-.05em}
+  @keyframes blinkCaret{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+  .twist-sub{font-size:clamp(20px,2.3vw,30px);color:var(--fg);font-weight:300;margin-top:20px}
+
+  .essence-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:56px}
+  .essence-card{padding:36px 28px;background:var(--bg);border:1px solid var(--line);border-radius:16px;position:relative;transition:border-color .4s,transform .4s}
+  .essence-card:hover{border-color:var(--accent);transform:translateY(-4px)}
+  .essence-card .n{font-family:var(--en);font-size:42px;font-weight:600;color:var(--accent);opacity:.6;margin-bottom:10px;letter-spacing:-.02em}
+  .essence-card h4{font-size:18px;font-weight:500;margin-bottom:10px;line-height:1.4}
+  .essence-card p{font-size:14px;line-height:1.7}
+
+  .anywhere-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:64px}
+  .loc{padding:44px 32px;background:var(--bg-2);border:1px solid var(--line);border-radius:18px;text-align:center;transition:all .4s}
+  .loc:hover{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-dim),transparent 80%),var(--bg-2)}
+  .loc-ico{font-size:40px;color:var(--accent);margin-bottom:18px;font-family:var(--en);line-height:1}
+  .loc h4{font-size:18px;font-weight:500;margin-bottom:10px}
+  .loc p{font-size:14px;line-height:1.7}
+
+  .faas-grid{display:grid;grid-template-columns:1fr;gap:40px;margin-top:56px;max-width:1000px}
+  .faas-why{max-width:1000px}
+  .why-list strong{font-size:18px}
+  .why-list p{font-size:15px}
+  .faas-logos{display:flex;flex-direction:column;gap:14px}
+  .f-logo{padding:28px 28px;background:var(--bg);border:1px solid var(--line);border-radius:16px;display:flex;justify-content:space-between;align-items:center;transition:all .4s}
+  .f-logo:hover{border-color:var(--accent);transform:translateX(6px)}
+  .f-logo .name{font-family:var(--en);font-size:20px;font-weight:600;color:var(--fg)}
+  .f-logo .tag{font-family:var(--en);font-size:10px;letter-spacing:.25em;color:var(--fg-dim-2);text-transform:uppercase;padding:4px 10px;border:1px solid var(--line-2);border-radius:999px}
+  .faas-why h3{margin-bottom:24px}
+  .why-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+  .why-list li{display:grid;grid-template-columns:1fr;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+  .why-list .k{font-family:var(--en);font-size:11px;letter-spacing:.2em;color:var(--accent);padding-top:4px}
+  .why-list strong{font-weight:500;font-size:15px;color:var(--fg);display:block;margin-bottom:4px}
+  .why-list p{font-size:13px;line-height:1.6}
+
+  .ngrok{display:grid;grid-template-columns:1fr auto 1fr;gap:32px;align-items:stretch;margin-top:56px}
+  .ngrok-before,.ngrok-after{padding:32px 28px;background:var(--bg-2);border:1px solid var(--line);border-radius:18px;display:flex;flex-direction:column}
+  .ngrok .tag{font-family:var(--en);font-size:10px;letter-spacing:.3em;color:var(--fg-dim-2);text-transform:uppercase;margin-bottom:18px}
+  .ngrok .tag.on{color:var(--success)}
+  .ngrok h4{font-size:20px;font-weight:500;margin-bottom:10px}
+  .ngrok p{font-size:14px;line-height:1.7;margin-bottom:20px}
+  .term{margin-top:auto;background:#2b2a26;border:1px solid var(--line-2);border-radius:10px;padding:16px;font-family:var(--mono);font-size:12px;color:#f2efe6}
+  .t-line{padding:4px 0;color:#c9c7bf}
+  .t-line .p{color:var(--accent);margin-right:8px}
+  .t-line .err{color:var(--danger)}
+  .t-line .ok{color:var(--success)}
+  .t-line .d{color:var(--fg-dim-2);font-size:11px}
+  .term.on{border-color:oklch(0.78 0.13 155 / 0.3)}
+  .ngrok-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:80px}
+  .ngrok-arrow .arrow-body{width:40px;height:2px;background:linear-gradient(90deg,var(--fg-dim-2),var(--accent));position:relative}
+  .ngrok-arrow .arrow-body::after{content:"";position:absolute;right:-1px;top:50%;transform:translateY(-50%) rotate(45deg);width:8px;height:8px;border-top:2px solid var(--accent);border-right:2px solid var(--accent)}
+  .ngrok-arrow .arrow-label{font-family:var(--en);font-size:11px;letter-spacing:.25em;color:var(--accent);text-transform:uppercase;padding:4px 10px;border:1px solid var(--accent);border-radius:999px}
+
+  .stack-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:56px;max-width:900px;margin-left:auto;margin-right:auto}
+  .stack-card{padding:32px 28px;background:var(--bg);border:1px solid var(--line);border-radius:16px;transition:all .4s}
+  .stack-card:hover{border-color:var(--accent);transform:translateY(-4px)}
+  .stack-no{font-family:var(--en);font-size:10px;letter-spacing:.25em;color:var(--fg-dim-2);text-transform:uppercase;margin-bottom:14px}
+  .stack-name{font-family:var(--en);font-size:24px;font-weight:600;color:var(--fg);margin-bottom:10px;letter-spacing:-.01em}
+  .stack-card p{font-size:14px;line-height:1.7}
+  .cdk-note{margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:40px;background:var(--bg);border:1px solid var(--line);border-radius:20px}
+  .cdk-left h3{margin:14px 0 16px;font-size:24px;font-weight:500;line-height:1.3}
+  .cdk-code{background:#2b2a26;color:#f2efe6;border:1px solid var(--line-2);border-radius:12px;overflow:hidden;font-family:var(--mono);font-size:12px;line-height:1.7}
+  .cdk-note--handler .cdk-code{
+    border-radius:14px;
+    border:1px solid rgba(0,113,227,0.18);
+    box-shadow:
+      0 4px 24px rgba(0,0,0,0.08),
+      0 0 0 1px rgba(255,255,255,0.04) inset,
+      0 1px 0 rgba(255,255,255,0.06) inset;
+  }
+  .cdk-note--handler .cdk-code .code-head{
+    background:linear-gradient(90deg, rgba(0,113,227,0.12), rgba(175,82,222,0.06));
+    border-bottom-color:rgba(255,255,255,0.1);
+  }
+  .cdk-code .code-body{padding:20px 22px;overflow-x:auto;white-space:pre}
+  .cdk-note--handler{grid-template-columns:1fr;gap:28px;align-items:stretch}
+  .cdk-note--handler .cdk-left{max-width:720px}
+  .cdk-code .code-body--plain{padding:0;margin:0;background:transparent;border:none;font-size:11px;line-height:1.65}
+  .cdk-code .code-body--plain code{display:block;padding:20px 22px;font-family:inherit;color:#e8e6df;white-space:pre;overflow-x:auto}
+  /* Lambda handler: シンタックスハイライト（cdk-code 内のみ） */
+  .cdk-code .code-body--hi{
+    margin:0;
+    padding:22px 24px 24px;
+    overflow-x:auto;
+    white-space:pre;
+    font-size:12px;
+    line-height:1.78;
+    tab-size:2;
+    background:
+      radial-gradient(ellipse 120% 80% at 0% -20%, rgba(0,113,227,0.22), transparent 55%),
+      radial-gradient(ellipse 80% 60% at 100% 120%, rgba(175,82,222,0.12), transparent 50%),
+      linear-gradient(180deg, #2a2824 0%, #1c1b19 100%);
+    border-top:1px solid rgba(255,255,255,0.08);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .cdk-code .code-body--hi code{
+    font-family:var(--mono);
+    font-weight:400;
+    color:#d8d3c8;
+    letter-spacing:0.01em;
+  }
+  .cdk-code .code-body--hi .hi-kw{color:#ffcc6b;font-weight:600}
+  .cdk-code .code-body--hi .hi-fn{color:#d4a8ff;font-weight:500}
+  .cdk-code .code-body--hi .hi-str{color:#7ee8a8}
+  .cdk-code .code-body--hi .hi-num{color:#ff9f6e}
+  .cdk-code .code-body--hi .hi-key{color:#5fd4ff}
+  .cdk-code .code-body--hi .hi-cm{color:#7a776c;font-style:italic}
+  .cdk-code .code-body--hi .hi-cm-line{color:#8a877a;font-style:italic}
+  .cdk-code .code-body--hi .hi-bi{color:#8ed4ff;font-weight:500}
+  .cdk-code .code-body--hi .hi-param{color:#a8d4f0}
+  .cdk-code .code-body--hi .hi-punct{color:#8f8a82}
+  .cdk-code .code-body--hi .hi-op{color:#f0b090}
+
+  .modern-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:64px;flex-wrap:wrap}
+  .modern-chip{padding:22px 32px;background:var(--bg-2);border:1px solid var(--line);border-radius:999px;font-family:var(--en);font-size:18px;font-weight:500;color:var(--fg);letter-spacing:.01em}
+  .modern-chip.primary{background:var(--accent);color:#0a0a0b;border-color:var(--accent);font-weight:600;box-shadow:0 12px 60px var(--accent-dim)}
+  .plus,.equals{font-family:var(--en);font-size:24px;color:var(--fg-dim-2);font-weight:300}
+  .equals{color:var(--accent);font-weight:500}
+
+  .sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
+  .sum{padding:32px 24px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;position:relative;transition:all .4s}
+  .sum:hover{border-color:var(--accent);transform:translateY(-4px)}
+  .sum .k{font-family:var(--en);font-size:11px;letter-spacing:.25em;color:var(--accent);margin-bottom:14px;display:block}
+  .sum h4{font-size:17px;font-weight:500;margin-bottom:10px;line-height:1.4}
+  .sum p{font-size:13px;line-height:1.65}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:960px){
+    section{padding:100px 20px}
+    .two-col,.example,.compare,.tool,.cdk-note,.faas-grid{grid-template-columns:1fr;gap:32px}
+    .two-col .copy{position:static}
+    .types,.field-types{grid-template-columns:repeat(2,1fr)}
+    .bands{grid-template-columns:repeat(2,1fr)}
+    .bands .b:nth-child(2){border-right:0}
+    .notes,.pain-grid,.essence-row,.anywhere-grid,.stack-grid{grid-template-columns:1fr}
+    .sum-grid{grid-template-columns:repeat(2,1fr)}
+    .intro-grid{grid-template-columns:1fr}
+    .intro-stats{border-left:0;border-top:1px solid var(--line);padding:24px 0 0}
+    .flow{grid-template-columns:1fr}
+    .flow-arrow{width:2px;height:24px;background:var(--line-2);justify-self:center}
+    .flow-arrow::after{top:auto;right:50%;bottom:-1px;transform:translateX(50%) rotate(135deg)}
+    .ngrok{grid-template-columns:1fr}
+    .ngrok-arrow{flex-direction:row;min-width:auto}
+    .ngrok-arrow .arrow-body{width:2px;height:40px;background:linear-gradient(180deg,var(--fg-dim-2),var(--accent))}
+    .ngrok-arrow .arrow-body::after{right:50%;top:auto;bottom:-1px;transform:translateX(50%) rotate(135deg)}
+    .nav .links{display:none}
+    .stage-inner{grid-template-columns:1fr}
+    footer .container{grid-template-columns:1fr}
+  }
+  /* ---------- DECLUTTER: hide small caps noise ---------- */
+  .sec-num{display:none !important}
+  .sec-head .eyebrow{display:none !important}
+  .hero .meta{display:none !important}
+  .scroll-hint{display:none !important}
+  .card .tag,
+  .type-card .n,
+  .flow-node small,
+  .note .n,
+  .pain-num,
+  .stack-no,
+  .bands .b .lbl,
+  .intro-stats .n,
+  .f-logo .tag,
+  .ngrok .tag,
+  .ngrok-arrow .arrow-label,
+  .why-list .k,
+  .sum .k,
+  .example .label,
+  .tool .how li::before,
+  footer h5,
+  .copy-line{display:none !important}
+  footer ul a{font-size:15px}
+  .sec-head{margin-bottom:56px}
+
+</style>
+</head>
+<body>
+
+<template id="__bundler_thumbnail" data-bg-color="#0a0a0b">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0a0a0b"/>
+    <g fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1">
+      <path d="M0 200 H1200 M0 400 H1200 M0 600 H1200"/>
+      <path d="M300 0 V800 M600 0 V800 M900 0 V800"/>
+    </g>
+    <circle cx="600" cy="400" r="260" fill="oklch(0.78 0.12 240 / 0.25)"/>
+    <text x="600" y="430" text-anchor="middle" font-family="Inter,Helvetica,sans-serif" font-size="140" font-weight="700" fill="#f2f2f3" letter-spacing="-4">i-Reporter</text>
+    <text x="600" y="520" text-anchor="middle" font-family="Inter,Helvetica,sans-serif" font-size="32" font-weight="400" fill="oklch(0.78 0.12 240)" letter-spacing="6">APP INTERFACE</text>
+  </svg>
+</template>
+
+<!-- Progress bar -->
+</div>
+
+<!-- HERO -->
+
+<style id="deck-overrides">
+  .reveal{opacity:1 !important;transform:none !important}
+</style>
+</style>
+
+<deck-stage-disabled width="1920" height="1080">
+<section class="hero" data-screen-label="01 Hero">
+  <div class="hero-grid"></div>
+  <div class="hero-halo"></div>
+  <div class="container">
+    <div class="meta reveal">
+      <span><span class="dot"></span>iRepo Dev Conference</span>
+      <span>Talk / 2026</span>
+      <span>i-Reporter × App Interface</span>
+    </div>
+    <h1 class="reveal d1">
+      <span class="jp">これまで難しかったことが、どうシンプルになるのか。</span>
+      <em>i-Reporter<br/>App Interface活用法。</em>
+    </h1>
+    <div class="hero-sub reveal d3">
+      <p class="lead">
+        本日は、i-Reporter のApp Interfaceの活用方法について。
+      </p>
+      <div class="scroll-hint">
+        <span>Scroll</span>
+        <div class="line"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TALK NARRATIVE ============ -->
+
+<!-- SELF INTRO -->
+<section id="intro" data-screen-label="02 Self Intro" style="padding-top:120px;padding-bottom:100px">
+  <div class="container">
+    <div class="sec-head" style="margin-bottom:40px">
+      <span class="sec-num reveal">§ 00 — SELF INTRO</span>
+      <div class="eyebrow reveal d1">自己紹介</div>
+      <h2 class="reveal d2">i-Reporter 運用経験者の立場から。</h2>
+    </div>
+    <div class="intro-card reveal d3">
+      <div class="intro-grid">
+        <div class="intro-avatar"><span>iR</span></div>
+        <div>
+          <div class="intro-name">西田　稔</div>
+          <div class="intro-role">製品戦略室　室長　現場DXラボ長</div>
+          <p style="margin-top:18px">現場で i-Reporter を運用してきた立場から、i-Reporter App Interfaceの魅力を、コードも交えながらお届けします。</p>
+        </div>
+        <div class="intro-stats">
+          <div><span class="n">運用</span><span class="v">実務あり</span></div>
+          <div><span class="n">関心</span><span class="v">App Interface / FaaS</span></div>
+          <div><span class="n">スタック</span><span class="v">AWS Lambda · API Gateway · Node.js</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAIN POINT -->
+<section id="pain" data-screen-label="03 Pain" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 01 — PAIN POINT</span>
+      <div class="eyebrow reveal d1">これまでの課題</div>
+      <h2 class="reveal d2">Gateway、便利ですよね。<br/>でも、ちょっと大変じゃないですか？</h2>
+    </div>
+    <div class="pain-grid">
+      <div class="pain reveal">
+        <div class="pain-num">01</div>
+        <h3>サーバーを触るのが、怖い</h3>
+        <p>本番のGatewayサーバーに手を入れるとき、毎回ちょっと祈っています。運用先への依頼と待ち時間も、地味にこたえます。</p>
+      </div>
+      <div class="pain reveal d1">
+        <div class="pain-num">02</div>
+        <h3>「中に入る」のが、気が重い</h3>
+        <p>i-Reporterの中で処理を作るのは、正直ちょっと腰が引けます。どこから手をつけていいか分からない、という方も多いのでは。</p>
+      </div>
+      <div class="pain reveal d2">
+        <div class="pain-num">03</div>
+        <h3>調べることが、多すぎる</h3>
+        <p>Python縛り、Gatewayサーバーの管理、デプロイ手順...。「やってみよう」と思っても、最初の一歩までが遠い。そんな声を、よく聞きました。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TURN — IT'S JSON -->
+<section id="turn" data-screen-label="04 Turn JSON">
+  <div class="container">
+    <div class="sec-head" style="text-align:center;margin:0 auto;max-width:900px">
+      <span class="sec-num reveal">§ 02 — THE TWIST</span>
+      <div class="eyebrow reveal d1" style="justify-content:center">今回のポイント</div>
+    </div>
+    <div class="twist reveal d2">
+      <p class="twist-lead">Gatewayは、<br/>Gatewayがなくてもうごきます。笑</p>
+      <div class="twist-big">JSON<span class="blink">_</span></div>
+      <p class="twist-sub">決まった形のJSONを、きちんと返す。<br/>たったそれだけ、なんです。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ESSENCE -->
+<section id="essence" data-screen-label="05 Essence" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 03 — ESSENCE</span>
+      <div class="eyebrow reveal d1">アプリインターフェースの本質</div>
+      <h2 class="reveal d2">決まった形のJSONを返せば、<br/>どこでも動きます。</h2>
+      <p class="lead reveal d3" style="margin-top:24px">
+        それがi-Reporter App Interface<br/>
+      </p>
+    </div>
+    <div class="essence-row">
+      <div class="essence-card reveal">
+        <div class="n">01</div>
+        <h4>JSON が返せれば OK</h4>
+      </div>
+      <div class="essence-card reveal d1">
+        <div class="n">02</div>
+        <h4>サーバー内部である必要なし</h4>
+      </div>
+      <div class="essence-card reveal d2">
+        <div class="n">03</div>
+        <h4>言語も場所も自由</h4>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ANYWHERE -->
+<section id="anywhere" data-screen-label="06 Runs Anywhere">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 04 — RUNS ANYWHERE</span>
+      <div class="eyebrow reveal d1">どこでも動く</div>
+      <h2 class="reveal d2">自社サーバー、クラウド、<br/>ローカル。どこでも。</h2>
+    </div>
+    <div class="anywhere-grid">
+      <div class="loc reveal"><div class="loc-ico">☁</div><h4>自社サーバー</h4></div>
+      <div class="loc reveal d1"><div class="loc-ico">◎</div><h4>クラウド</h4></div>
+      <div class="loc reveal d2"><div class="loc-ico">◫</div><h4>ローカル環境</h4></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODERN STYLE -->
+<section id="modern" data-screen-label="10 Modern Dev">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 08 — MODERN DEV</span>
+      <div class="eyebrow reveal d1">今どきの開発スタイルへ</div>
+      <h2 class="reveal d2">i-Reporterも、<br/>「今どき」にしちゃいましょう。</h2>
+    </div>
+    <div class="modern-row">
+      <div class="modern-chip reveal">FaaS</div>
+      <div class="plus">+</div>
+      <div class="modern-chip reveal d1">ngrok</div>
+      <div class="plus">+</div>
+      <div class="modern-chip reveal d2">クラウド連携</div>
+      <div class="equals">=</div>
+      <div class="modern-chip primary reveal d3">今どきの現場帳票</div>
+    </div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary" data-screen-label="11 Summary" style="background:linear-gradient(180deg,var(--bg-2),var(--bg));border-top:1px solid var(--line)">
+  <div class="container" style="max-width:860px;text-align:center">
+    <div class="sec-head" style="margin-bottom:40px;text-align:center">
+      <h2 class="reveal d2" style="font-size:clamp(40px,5vw,72px)">JSONを返す。<br/>それだけで、連携は動きます。</h2>
+    </div>
+    <p class="reveal d3" style="font-size:22px;line-height:1.9;color:var(--fg);font-weight:400;max-width:720px;margin:40px auto 0">
+      サーバーの中に入らなくても、Pythonじゃなくても、<br/>
+      自分の好きな道具で、自分のやり方で書けます。<br/>
+      i-Reporterは、思ったよりずっと自由です。
+    </p>
+    <p class="reveal d3" style="margin-top:56px;font-size:20px;color:var(--fg)">
+      ぜひ、手を動かしてみてください。
+    </p>
+  </div>
+</section>
+<!-- APPENDIX DIVIDER -->
+<section id="appendix-start" data-screen-label="12 Appendix" style="padding:120px 32px 60px;text-align:center;border-top:1px solid var(--line);background:var(--bg-2)">
+  <div class="container">
+    <span class="sec-num reveal">APPENDIX</span>
+    <h2 class="reveal d1" style="margin-top:16px">補足資料</h2>
+    <p class="lead reveal d2" style="margin:20px auto 0;max-width:640px">ここから先は、実装への手引きです。「自分でも作ってみたい」と思った方は、どうぞ。</p>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack" data-screen-label="09 Stack" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 07 — TODAY'S STACK</span>
+      <div class="eyebrow reveal d1">今回の構成（技術スタック）</div>
+      <h2 class="reveal d2">今回は、AWS Lambda を軸に組みます。</h2>
+      <p class="lead reveal d3" style="margin-top:24px">
+        <strong>CDK は使いません。</strong>コンソールなど最短の手順で関数を立ち上げ、<strong>Lambda の簡単さ</strong>（呼ばれたときだけ動き、JSON を返せばよい）をまず体感してもらいます。AzureではなくAWSを選んだ理由は、「人が読んで、理解できる」こと。コードは綴麻質ではなく、ちゃんと読み物になってほしいので。
+      </p>
+    </div>
+    <div class="stack-grid">
+      <div class="stack-card reveal">
+        <div class="stack-no">LAYER 01</div>
+        <div class="stack-name">AWS Lambda</div>
+        <p>i-Reporter からのリクエストを受けて、JSON を返す関数。</p>
+      </div>
+      <div class="stack-card reveal d1">
+        <div class="stack-no">LAYER 02</div>
+        <div class="stack-name">API Gateway</div>
+        <p>HTTPS の URL を用意し、Lambda に届ける窓口。まずはここまでつなげば、i-Reporter から叩けます。</p>
+      </div>
+    </div>
+
+    <div class="cdk-note cdk-note--handler reveal d1">
+      <div class="cdk-left">
+        <div class="eyebrow">Lambda でやること</div>
+        <h3>リクエストを受けて決まった形の JSON を返す。</h3>
+        </div>
+      <div class="cdk-code">
+        <div class="code-head">
+          <div class="code-head-left">
+            <div class="dots"><i></i><i></i><i></i></div>
+            <div class="lang">index.mjs（ハンドラー一式）</div>
+          </div>
+          <button type="button" class="code-copy-btn" data-copy-target="lambda-handler-code" aria-label="コードをクリップボードにコピー">コピー</button>
+        </div>
+<pre class="code-body code-body--hi"><code id="lambda-handler-code"><span class="hi-cm">/**
+ * i-Reporter App Interface 向けの最小レスポンス例。
+ * シート1・クラスター1 に「ハロー」を書き込む JSON を返します。
+ *
+ * Lambda コンソールの既定テンプレに近い export const handler 形式。
+ * API Gateway（Lambda プロキシ統合）から呼ばれる想定。
+ */</span>
+<span class="hi-kw">export</span> <span class="hi-kw">const</span> <span class="hi-fn">handler</span> <span class="hi-op">=</span> <span class="hi-kw">async</span> <span class="hi-punct">(</span><span class="hi-param">event</span><span class="hi-punct">)</span> <span class="hi-op">=&gt;</span> <span class="hi-punct">{</span>
+  <span class="hi-cm-line">// TODO: 必要なら event をログ</span>
+  <span class="hi-cm-line">// console.log(JSON.stringify(event, null, 2));</span>
+
+  <span class="hi-kw">const</span> <span class="hi-param">appInterfaceResponse</span> <span class="hi-op">=</span> <span class="hi-punct">{</span>
+    <span class="hi-key">result</span><span class="hi-punct">: {</span>
+      <span class="hi-key">code</span><span class="hi-punct">:</span> <span class="hi-num">0</span><span class="hi-punct">,</span>
+      <span class="hi-key">description</span><span class="hi-punct">:</span> <span class="hi-str">"OK"</span><span class="hi-punct">,</span>
+    <span class="hi-punct">},</span>
+    <span class="hi-key">apply</span><span class="hi-punct">: [</span>
+      <span class="hi-punct">{</span>
+        <span class="hi-key">sheet</span><span class="hi-punct">:</span> <span class="hi-num">1</span><span class="hi-punct">,</span>
+        <span class="hi-key">cluster</span><span class="hi-punct">:</span> <span class="hi-num">1</span><span class="hi-punct">,</span>
+        <span class="hi-key">type</span><span class="hi-punct">:</span> <span class="hi-str">"string"</span><span class="hi-punct">,</span>
+        <span class="hi-key">value</span><span class="hi-punct">:</span> <span class="hi-str">"ハロー"</span><span class="hi-punct">,</span>
+      <span class="hi-punct">},</span>
+    <span class="hi-punct">],</span>
+  <span class="hi-punct">};</span>
+
+  <span class="hi-kw">const</span> <span class="hi-param">response</span> <span class="hi-op">=</span> <span class="hi-punct">{</span>
+    <span class="hi-key">statusCode</span><span class="hi-punct">:</span> <span class="hi-num">200</span><span class="hi-punct">,</span>
+    <span class="hi-key">headers</span><span class="hi-punct">: {</span>
+      <span class="hi-str">"Content-Type"</span><span class="hi-punct">:</span> <span class="hi-str">"application/json; charset=utf-8"</span><span class="hi-punct">,</span>
+      <span class="hi-str">"Access-Control-Allow-Origin"</span><span class="hi-punct">:</span> <span class="hi-str">"*"</span><span class="hi-punct">,</span>
+    <span class="hi-punct">},</span>
+    <span class="hi-key">body</span><span class="hi-punct">:</span> <span class="hi-bi">JSON</span><span class="hi-punct">.</span><span class="hi-fn">stringify</span><span class="hi-punct">(</span><span class="hi-param">appInterfaceResponse</span><span class="hi-punct">),</span>
+  <span class="hi-punct">};</span>
+  <span class="hi-kw">return</span> <span class="hi-param">response</span><span class="hi-punct">;</span>
+<span class="hi-punct">};</span>
+</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- FaaS -->
+<section id="faas" data-screen-label="07 FaaS Fit" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 05 — FaaS FIT</span>
+      <div class="eyebrow reveal d1">FaaS との相性</div>
+      <h2 class="reveal d2">FaaSと、本当に相性がいいんです。</h2>
+    </div>
+    <div class="faas-grid">
+      <div class="faas-logos reveal">
+        <div class="f-logo"><span class="name">AWS Lambda</span><span class="tag">Event-driven</span></div>
+        <div class="f-logo"><span class="name">Azure Functions</span><span class="tag">Lightweight</span></div>
+      </div>
+      <div class="faas-why reveal d1">
+        <h3>なぜ相性が良いのか</h3>
+        <ul class="why-list">
+          <li><span class="k">01</span><div><strong>JSON 入出力中心</strong><p>リクエスト・レスポンスとも JSON。FaaS の最も得意な形。</p></div></li>
+          <li><span class="k">02</span><div><strong>処理がシンプル</strong><p>短い関数 1つで完結できる。コールドスタートが問題になりにくい。</p></div></li>
+          <li><span class="k">03</span><div><strong>API 化しやすい</strong><p>API Gateway と組み合わせれば、そのまま公開エンドポイントに。</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ngrok -->
+<section id="ngrok" data-screen-label="08 ngrok">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 06 — DEV TIP</span>
+      <div class="eyebrow reveal d1">開発のハードルを下げる工夫</div>
+      <h2 class="reveal d2">iPhoneやiPadからの実機テスト、どうしていますか？</h2>
+    </div>
+    <div class="ngrok">
+      <div class="ngrok-before reveal">
+        <div class="tag">Before</div>
+        <h4>localhost 問題</h4>
+        <p>iPhone や iPad で動作確認するとき、<code>localhost</code> は当然届かない。そのたびに仮デプロイするのは面倒…。</p>
+        <div class="term">
+          <div class="t-line"><span class="p">iPad ⇢</span> <span class="err">ERR_CONNECTION_REFUSED</span></div>
+          <div class="t-line"><span class="p">http://localhost:3000</span></div>
+          <div class="t-line"><span class="d">(実機からは届かない)</span></div>
+        </div>
+      </div>
+      <div class="ngrok-arrow reveal d1">
+        <div class="arrow-body"></div>
+        <span class="arrow-label">ngrok</span>
+      </div>
+      <div class="ngrok-after reveal d2">
+        <div class="tag on">After</div>
+        <h4>ローカルを外部公開</h4>
+        <p>ngrok でローカルを一時的に外部公開。iPhone からも URL 一発でテストできる。</p>
+        <div class="term on">
+          <div class="t-line"><span class="p">iPad ⇢</span> <span class="ok">200 OK</span></div>
+          <div class="t-line"><span class="p">https://a1b2c3.ngrok.app</span></div>
+          <div class="t-line"><span class="d">→ localhost:3000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- OVERVIEW -->
+<section id="overview" data-screen-label="02 Overview">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 01 — INTRODUCTION</span>
+      <div class="eyebrow reveal d1">はじめに</div>
+      <h2 class="reveal d2">今まで以上に自由な、<br/>現場帳票システムの実現へ。</h2>
+      <p class="lead reveal d3" style="margin-top:28px">
+        本仕様を公開することで、i-Reporter と外部システムの連携における技術的制約を解消。開発者は、好みの言語・フレームワークで自由に連携を構築できるようになる。
+      </p>
+    </div>
+
+    <div class="eyebrow reveal" style="margin-top:48px">提供する2つの外部連携構築方法</div>
+    <div class="compare">
+      <div class="card reveal d1">
+        <div class="tag">Option&nbsp;01</div>
+        <h3>ConMas Gateway による連携</h3>
+        <p>Python でアクションファイルを作成し、Gateway サーバーに配置することで外部システムと連携する。弊社フレームワークを使用するため、サポートが充実している。</p>
+        <ul>
+          <li><span class="k">Pro</span><span>シムトップスがサポートできる連携方法</span></li>
+          <li><span class="k">Con</span><span>Python 縛り／Gateway サーバー管理が必要</span></li>
+          <li><span class="k">For</span><span>安定した連携を求めるお客様</span></li>
+        </ul>
+      </div>
+      <div class="card primary reveal d2">
+        <div class="tag">Option&nbsp;02 — New</div>
+        <h3>お客様環境による自由な連携</h3>
+        <p>「i-Reporter App Interface」仕様に従って JSON レスポンスを返す仕組みを実装するだけ。ConMas Gateway を利用せずとも、あらゆるプログラミング言語やフレームワークで連携可能。</p>
+        <ul>
+          <li><span class="k">Pro</span><span>Python 縛りから解放、多様な技術スタックで開発可能</span></li>
+          <li><span class="k">Feat</span><span>上位システム／任意のAPIと直接連携</span></li>
+          <li><span class="k">Note</span><span>実装部分のサポートは限定的</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Flow diagram -->
+    <div class="diagram reveal d1">
+      <div class="eyebrow" style="margin-bottom:28px">基本的な連携の流れ</div>
+      <div class="flow">
+        <div class="flow-node" data-flow="0">
+          <div class="icon">i</div>
+          <h4>i-Reporter</h4>
+          <small>Client / Form</small>
+        </div>
+        <div class="flow-arrow"><span class="pulse"></span></div>
+        <div class="flow-node" data-flow="1">
+          <div class="icon">{ }</div>
+          <h4>HTTP Request</h4>
+          <small>multipart / GET</small>
+        </div>
+        <div class="flow-arrow"><span class="pulse" style="animation-delay:1s"></span></div>
+        <div class="flow-node" data-flow="2">
+          <div class="icon">◨</div>
+          <h4>Your Server</h4>
+          <small>Any Language</small>
+        </div>
+      </div>
+      <div class="flow" style="margin-top:32px;grid-template-columns:1fr">
+        <div class="flow-arrow" style="width:100%;transform:rotate(180deg)"><span class="pulse"></span></div>
+      </div>
+      <div class="flow" style="margin-top:32px">
+        <div class="flow-node" style="grid-column:1/-1;max-width:480px;margin:0 auto;background:var(--accent-dim);border-color:var(--accent)">
+          <div class="icon" style="background:var(--accent);color:#000">JSON</div>
+          <h4 style="color:var(--accent)">App Interface Response</h4>
+          <small>apply[] → cluster values</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="bands reveal d2">
+      <div class="b"><div class="num">4</div><div class="lbl">Data Types</div></div>
+      <div class="b"><div class="num">5+</div><div class="lbl">Languages Supported</div></div>
+      <div class="b"><div class="num">500</div><div class="lbl">Records / Request</div></div>
+      <div class="b"><div class="num">1</div><div class="lbl">Response shape</div></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- SPEC / STRUCTURE (sticky) -->
+<section id="spec" data-screen-label="03 Response Spec" style="padding-bottom:40px">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 02 — RESPONSE SPEC</span>
+      <div class="eyebrow reveal d1">レスポンス仕様 / 基本構造</div>
+      <h2 class="reveal d2">とってもシンプル</h2>
+      <p class="lead reveal d3" style="margin-top:24px">
+        i-Reporter が読むのは、<code style="font-family:var(--mono);color:var(--accent)">result</code> と <code style="font-family:var(--mono);color:var(--accent)">apply[]</code> の2キーだけ。余計なフィールドも独自拡張も不要で、挙動は読み取りやすい。
+      </p>
+    </div>
+  </div>
+
+  <!-- Sticky stage: code on one side, caption on the other -->
+  <div class="stage" id="specStage">
+    <div class="stage-sticky">
+      <div class="container stage-inner">
+        <div class="stage-copy">
+          <div class="eyebrow" id="stageEyebrow">01 / 05 — Result</div>
+          <h3 id="stageTitle">ステータスを返す</h3>
+          <p id="stageDesc" style="margin-top:16px"><code style="font-family:var(--mono);color:var(--accent)">result.code</code> は <code style="font-family:var(--mono);color:var(--accent)">0</code> で成功。それ以外の値を返すと、<code style="font-family:var(--mono);color:var(--accent)">description</code> がエラーメッセージとして表示される。</p>
+        </div>
+        <div class="code-block">
+          <div class="code-head">
+            <div class="dots"><i></i><i></i><i></i></div>
+            <div class="lang">response.json</div>
+          </div>
+          <div class="code-body" id="structCode"><span class="struct-line" data-step="0">{</span>
+<span class="struct-line" data-step="0">  <span class="key">"result"</span>: {</span>
+<span class="struct-line" data-step="0">    <span class="key">"code"</span>: <span class="num">0</span>,</span>
+<span class="struct-line" data-step="0">    <span class="key">"description"</span>: <span class="str">"データ取得成功"</span></span>
+<span class="struct-line" data-step="0">  },</span>
+<span class="struct-line" data-step="1">  <span class="key">"apply"</span>: [</span>
+<span class="struct-line" data-step="1">    {</span>
+<span class="struct-line" data-step="2">      <span class="key">"item"</span>: <span class="str">"factory-name"</span>,</span>
+<span class="struct-line" data-step="3">      <span class="key">"sheet"</span>: <span class="num">1</span>,</span>
+<span class="struct-line" data-step="3">      <span class="key">"cluster"</span>: <span class="num">2</span>,</span>
+<span class="struct-line" data-step="4">      <span class="key">"type"</span>: <span class="str">"string"</span>,</span>
+<span class="struct-line" data-step="4">      <span class="key">"value"</span>: <span class="str">"東京工場"</span></span>
+<span class="struct-line" data-step="1">    },</span>
+<span class="struct-line" data-step="1">    {</span>
+<span class="struct-line" data-step="2">      <span class="key">"item"</span>: <span class="str">"address"</span>,</span>
+<span class="struct-line" data-step="3">      <span class="key">"sheet"</span>: <span class="num">1</span>,</span>
+<span class="struct-line" data-step="3">      <span class="key">"cluster"</span>: <span class="num">3</span>,</span>
+<span class="struct-line" data-step="4">      <span class="key">"type"</span>: <span class="str">"string"</span>,</span>
+<span class="struct-line" data-step="4">      <span class="key">"value"</span>: <span class="str">"〒105-0011 東京都港区芝公園…"</span></span>
+<span class="struct-line" data-step="1">    }</span>
+<span class="struct-line" data-step="1">  ]</span>
+<span class="struct-line" data-step="0">}</span></div>
+        </div>
+      </div>
+    </div>
+    <!-- Scroll step triggers -->
+    <div class="stage-steps">
+      <div class="stage-step" data-trigger="0"></div>
+      <div class="stage-step" data-trigger="1"></div>
+      <div class="stage-step" data-trigger="2"></div>
+      <div class="stage-step" data-trigger="3"></div>
+      <div class="stage-step" data-trigger="4"></div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPES -->
+<section style="padding-top:80px" data-screen-label="04 Data Types">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 03 — DATA TYPES</span>
+      <div class="eyebrow reveal d1">type の選択肢</div>
+      <h2 class="reveal d2">4種類の型が、<br/>すべてを表現する。</h2>
+    </div>
+    <div class="types">
+      <div class="type-card reveal"><div class="n">TYPE 01</div><div class="name">string</div><div class="desc">文字列・日付。日付も string として送信する。</div><div class="ex">"東京工場" / "2024/01/25"</div></div>
+      <div class="type-card reveal d1"><div class="n">TYPE 02</div><div class="name">image</div><div class="desc">画像。Base64 エンコードした文字列を値として送る。</div><div class="ex">"iVBORw0KGgo…"</div></div>
+      <div class="type-card reveal d2"><div class="n">TYPE 03</div><div class="name">SetFocus</div><div class="desc">特定のクラスターにフォーカスを設定する。value は不要。</div><div class="ex">(value なし)</div></div>
+      <div class="type-card reveal d3"><div class="n">TYPE 04</div><div class="name">SetItemsToSelect</div><div class="desc">単一選択クラスターの選択肢を動的に設定する。</div><div class="ex">selectItems[]</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLES -->
+<section id="examples" data-screen-label="05 Examples">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 04 — EXAMPLES</span>
+      <div class="eyebrow reveal d1">5つの実例</div>
+      <h2 class="reveal d2">基本構造</h2>
+    </div>
+
+    <!-- EX 1: string -->
+    <div class="example">
+      <div class="reveal">
+        <div class="label">Example 01</div>
+        <h3>文字列を反映する</h3>
+        <p class="desc">設備名や住所を i-Reporter に反映させる、もっとも基本的なパターン。<code style="font-family:var(--mono);color:var(--accent)">item</code> / <code style="font-family:var(--mono);color:var(--accent)">cluster</code> で反映先を指定する。</p>
+        <div class="preview">
+          <div class="row"><span class="k">FACTORY</span><span class="v"><span class="chip">string</span>東京工場</span></div>
+          <div class="row"><span class="k">ADDRESS</span><span class="v"><span class="chip">string</span>〒105-0011 東京都港区芝公園４丁目２−８</span></div>
+        </div>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">ex-01-string.json</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: {
+    <span class="key">"code"</span>: <span class="num">0</span>,
+    <span class="key">"description"</span>: <span class="str">"データ取得成功"</span>
+  },
+  <span class="key">"apply"</span>: [
+    {
+      <span class="key">"item"</span>:    <span class="str">"factory-name"</span>,
+      <span class="key">"sheet"</span>:   <span class="num">1</span>,
+      <span class="key">"cluster"</span>: <span class="num">2</span>,
+      <span class="key">"type"</span>:    <span class="str">"string"</span>,
+      <span class="key">"value"</span>:   <span class="str">"東京工場"</span>
+    },
+    {
+      <span class="key">"item"</span>:    <span class="str">"address"</span>,
+      <span class="key">"sheet"</span>:   <span class="num">1</span>,
+      <span class="key">"cluster"</span>: <span class="num">3</span>,
+      <span class="key">"type"</span>:    <span class="str">"string"</span>,
+      <span class="key">"value"</span>:   <span class="str">"〒105-0011 東京都港区芝公園４丁目２−８"</span>
+    }
+  ]
+}</div>
+      </div>
+    </div>
+
+    <!-- EX 2: image -->
+    <div class="example">
+      <div class="reveal">
+        <div class="label">Example 02</div>
+        <h3>画像を反映する</h3>
+        <p class="desc">画像は Base64 エンコードして送信する。type は <code style="font-family:var(--mono);color:var(--accent)">image</code>。</p>
+        <div class="img-placeholder">IMAGE<br/>(Base64)</div>
+        <div class="hint"><strong>Success ✓</strong> &nbsp; <code>data:image/png;base64,</code> のプレフィックスは不要。Base64 文字列だけを送る。</div>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">ex-02-image.json</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: {
+    <span class="key">"code"</span>: <span class="num">0</span>,
+    <span class="key">"description"</span>: <span class="str">"画像取得成功"</span>
+  },
+  <span class="key">"apply"</span>: [
+    {
+      <span class="key">"item"</span>:    <span class="str">"red-image"</span>,
+      <span class="key">"sheet"</span>:   <span class="num">1</span>,
+      <span class="key">"cluster"</span>: <span class="num">19</span>,
+      <span class="key">"type"</span>:    <span class="str">"image"</span>,
+      <span class="key">"value"</span>:   <span class="str">"iVBORw0KGgoAAAANSUhEUgAAAAoAAAAK…"</span>
+    }
+  ]
+}</div>
+      </div>
+    </div>
+
+    <!-- EX 3: date -->
+    <div class="example">
+      <div class="reveal">
+        <div class="label">Example 03</div>
+        <h3>日付を反映する</h3>
+        <p class="desc">日付専用の type は存在しない。<code style="font-family:var(--mono);color:var(--accent)">string</code> として <code style="font-family:var(--mono);color:var(--accent)">"YYYY/MM/DD"</code> 形式で送る。</p>
+        <div class="preview">
+          <div class="row"><span class="k">REPORT</span><span class="v"><span class="chip">string</span>2025 / 11 / 10</span></div>
+        </div>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">ex-03-date.json</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: {
+    <span class="key">"code"</span>: <span class="num">0</span>,
+    <span class="key">"description"</span>: <span class="str">"日付データ取得成功"</span>
+  },
+  <span class="key">"apply"</span>: [
+    {
+      <span class="key">"item"</span>:    <span class="str">"report-date"</span>,
+      <span class="key">"sheet"</span>:   <span class="num">1</span>,
+      <span class="key">"cluster"</span>: <span class="num">1</span>,
+      <span class="key">"type"</span>:    <span class="str">"string"</span>,
+      <span class="key">"value"</span>:   <span class="str">"2025/11/10"</span>
+    }
+  ]
+}</div>
+      </div>
+    </div>
+
+    <!-- EX 4: focus -->
+    <div class="example">
+      <div class="reveal">
+        <div class="label">Example 04</div>
+        <h3>フォーカスを設定する</h3>
+        <p class="desc">特定のクラスターにフォーカスを当てたい場合は <code style="font-family:var(--mono);color:var(--accent)">SetFocus</code> を使う。<code style="font-family:var(--mono);color:var(--accent)">item</code> 属性は不要。</p>
+        <div class="focus-mock">
+          <div class="cell">cluster 1</div>
+          <div class="cell">cluster 2</div>
+          <div class="cell">cluster 3</div>
+          <div class="cell">cluster 4</div>
+          <div class="cell on">cluster 5 ◉ focus</div>
+          <div class="cell">cluster 6</div>
+        </div>
+        <div class="hint"><strong>Success ✓</strong> &nbsp; <code>item</code> 属性は不要。<code>sheet</code> と <code>cluster</code> のみを指定する。</div>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">ex-04-focus.json</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: {
+    <span class="key">"code"</span>: <span class="num">0</span>,
+    <span class="key">"description"</span>: <span class="str">"フォーカス設定完了"</span>
+  },
+  <span class="key">"apply"</span>: [
+    {
+      <span class="key">"sheet"</span>:   <span class="num">2</span>,
+      <span class="key">"cluster"</span>: <span class="num">5</span>,
+      <span class="key">"type"</span>:    <span class="str">"SetFocus"</span>
+    }
+  ]
+}</div>
+      </div>
+    </div>
+
+    <!-- EX 5: select -->
+    <div class="example">
+      <div class="reveal">
+        <div class="label">Example 05</div>
+        <h3>選択肢を動的に設定する</h3>
+        <p class="desc">単一選択クラスターの選択肢を動的に変更。<code style="font-family:var(--mono);color:var(--accent)">selectItems[]</code> 配列に選択肢を並べ、<code style="font-family:var(--mono);color:var(--accent)">selected: true</code> で初期値を指定する。</p>
+        <div class="sel-mock">
+          <div class="head">PLCA-SELECT (cluster 15)</div>
+          <div class="opt on"><span class="radio"></span><span>設備 PLC-A</span></div>
+          <div class="opt"><span class="radio"></span><span>設備 PLC-B</span></div>
+        </div>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">ex-05-select.json</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: { <span class="key">"code"</span>: <span class="num">0</span>, <span class="key">"description"</span>: <span class="str">"選択肢設定完了"</span> },
+  <span class="key">"apply"</span>: [
+    {
+      <span class="key">"item"</span>:    <span class="str">"plca-select"</span>,
+      <span class="key">"sheet"</span>:   <span class="num">1</span>,
+      <span class="key">"cluster"</span>: <span class="num">15</span>,
+      <span class="key">"type"</span>:    <span class="str">"SetItemsToSelect"</span>,
+      <span class="key">"value"</span>:   <span class="str">"PLCA"</span>,
+      <span class="key">"selectItems"</span>: [
+        { <span class="key">"item"</span>: <span class="str">"PLCA"</span>, <span class="key">"label"</span>: <span class="str">"設備 PLC-A"</span>, <span class="key">"selected"</span>: <span class="kw">true</span> },
+        { <span class="key">"item"</span>: <span class="str">"PLCB"</span>, <span class="key">"label"</span>: <span class="str">"設備 PLC-B"</span>, <span class="key">"selected"</span>: <span class="kw">false</span> }
+      ]
+    }
+  ]
+}</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CUSTOM MASTER -->
+<section id="master" data-screen-label="06 Custom Master" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 05 — CUSTOM MASTER</span>
+      <div class="eyebrow reveal d1">カスタムマスター連携</div>
+      <h2 class="reveal d2">マスター選択を、<br/>API と結びつける。</h2>
+      <p class="lead reveal d3" style="margin-top:24px">
+        i-Reporter のマスター選択クラスターと API を連携できる。ConMas Designer が自動で <code style="font-family:var(--mono);color:var(--accent)">/fields</code> <code style="font-family:var(--mono);color:var(--accent)">/params</code> <code style="font-family:var(--mono);color:var(--accent)">/getrecords</code> をエンドポイント末尾に追加する。
+      </p>
+    </div>
+
+    <div class="eyebrow reveal" style="margin-top:40px">対応する型</div>
+    <div class="field-types">
+      <div class="ft reveal"><div class="t">text</div><div class="d">テキストクラスター</div></div>
+      <div class="ft reveal d1"><div class="t">date</div><div class="d">年月日クラスター</div></div>
+      <div class="ft reveal d2"><div class="t">bool</div><div class="d">チェッククラスター</div></div>
+      <div class="ft reveal d3"><div class="t">numeric</div><div class="d">数値クラスター</div></div>
+      <div class="ft reveal d4"><div class="t">time</div><div class="d">時刻クラスター</div></div>
+    </div>
+
+    <!-- Endpoint tour -->
+    <div class="two-col" style="margin-top:80px">
+      <div class="copy reveal">
+        <div class="eyebrow">Endpoint — /fields</div>
+        <h3>フィールド定義を返す</h3>
+        <p style="margin-top:16px"><code style="font-family:var(--mono);color:var(--accent)">fields/name</code> は表示名。<code style="font-family:var(--mono);color:var(--accent)">fields/item</code> は任意のアイテム名。<code style="font-family:var(--mono);color:var(--accent)">no</code> はレコードと対応付けるための番号。</p>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">GET /api/v1/master/fields</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: { <span class="key">"code"</span>: <span class="num">0</span>, <span class="key">"remarks"</span>: [<span class="str">"商品フィールド取得成功"</span>] },
+  <span class="key">"fields"</span>: [
+    { <span class="key">"no"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"product_id"</span>,    <span class="key">"type"</span>: <span class="str">"text"</span>,    <span class="key">"item"</span>: <span class="str">"product_id"</span>    },
+    { <span class="key">"no"</span>: <span class="num">2</span>, <span class="key">"name"</span>: <span class="str">"product_name"</span>,  <span class="key">"type"</span>: <span class="str">"text"</span>,    <span class="key">"item"</span>: <span class="str">"product_name"</span>  },
+    { <span class="key">"no"</span>: <span class="num">4</span>, <span class="key">"name"</span>: <span class="str">"price"</span>,         <span class="key">"type"</span>: <span class="str">"numeric"</span>, <span class="key">"item"</span>: <span class="str">"price"</span>         },
+    { <span class="key">"no"</span>: <span class="num">6</span>, <span class="key">"name"</span>: <span class="str">"is_active"</span>,     <span class="key">"type"</span>: <span class="str">"bool"</span>,    <span class="key">"item"</span>: <span class="str">"is_active"</span>     },
+    { <span class="key">"no"</span>: <span class="num">7</span>, <span class="key">"name"</span>: <span class="str">"created_date"</span>,  <span class="key">"type"</span>: <span class="str">"date"</span>,    <span class="key">"item"</span>: <span class="str">"created_date"</span>  }
+  ]
+}</div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:56px">
+      <div class="copy reveal">
+        <div class="eyebrow">Endpoint — /params</div>
+        <h3>検索パラメータを返す</h3>
+        <p style="margin-top:16px">検索時にクライアント側から送られるパラメータの定義。<code style="font-family:var(--mono);color:var(--accent)">name</code> と <code style="font-family:var(--mono);color:var(--accent)">type</code> のみ。</p>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">GET /api/v1/master/params</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: { <span class="key">"code"</span>: <span class="num">0</span>, <span class="key">"remarks"</span>: [<span class="str">"パラメータ取得成功"</span>] },
+  <span class="key">"params"</span>: [
+    { <span class="key">"name"</span>: <span class="str">"product_id"</span>, <span class="key">"type"</span>: <span class="str">"string"</span> }
+  ]
+}</div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:56px">
+      <div class="copy reveal">
+        <div class="eyebrow">Endpoint — /getrecords &nbsp;·&nbsp; POST</div>
+        <h3>レコードを返す</h3>
+        <p style="margin-top:16px">検索結果のレコード配列を返す。<code style="font-family:var(--mono);color:var(--accent)">defaultRecord</code> は任意、<code style="font-family:var(--mono);color:var(--accent)">records</code> が空の場合のデフォルト値。</p>
+        <div class="hint warn" style="margin-top:20px"><strong>Warning ⚠</strong> &nbsp; レコード数は <strong>500 程度</strong> が限度。bool は <code>"true"</code>/<code>"false"</code> 文字列、date は <code>"YYYY/MM/DD"</code>。</div>
+      </div>
+      <div class="code-block reveal d1">
+        <div class="code-head"><div class="dots"><i></i><i></i><i></i></div><div class="lang">POST /api/v1/master/getrecords</div></div>
+<div class="code-body">{
+  <span class="key">"result"</span>: {
+    <span class="key">"code"</span>: <span class="num">0</span>,
+    <span class="key">"remarks"</span>: [<span class="str">"レコード取得成功"</span>, <span class="str">"1件のレコードを取得"</span>]
+  },
+  <span class="key">"fields"</span>: [ <span class="cm">/* /fields と同じ定義 */</span> ],
+  <span class="key">"defaultRecord"</span>: {
+    <span class="key">"fields"</span>: [
+      { <span class="key">"no"</span>: <span class="num">1</span>, <span class="key">"value"</span>: <span class="str">"1001"</span> },
+      { <span class="key">"no"</span>: <span class="num">2</span>, <span class="key">"value"</span>: <span class="str">"製品A"</span> },
+      { <span class="key">"no"</span>: <span class="num">4</span>, <span class="key">"value"</span>: <span class="str">"15000"</span> },
+      { <span class="key">"no"</span>: <span class="num">6</span>, <span class="key">"value"</span>: <span class="str">"true"</span> },
+      { <span class="key">"no"</span>: <span class="num">7</span>, <span class="key">"value"</span>: <span class="str">"2024/01/15"</span> }
+    ]
+  },
+  <span class="key">"records"</span>: [
+    { <span class="key">"fields"</span>: [ <span class="cm">/* no &amp; value の配列 */</span> ] }
+  ]
+}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NOTES -->
+<section id="notes" data-screen-label="07 Notes">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 06 — IMPLEMENTATION NOTES</span>
+      <div class="eyebrow reveal d1">ご注意事項</div>
+      <h2 class="reveal d2">Tips</h2>
+    </div>
+    <div class="notes">
+      <div class="note reveal">
+        <div class="n">NOTE 01 · REQUEST</div>
+        <h4>POST は multipart/form-data</h4>
+        <p>i-Reporter からは <code>multipart/form-data</code> 形式で送られる。Node.js では <code>multer</code> を使うと便利。</p>
+      </div>
+      <div class="note reveal d1">
+        <div class="n">NOTE 02 · REQUEST</div>
+        <h4>GET はクエリで座標を送る</h4>
+        <p><code>?temperature={1,5}</code> — 1ページ目、クラスター index 5 を意味する。シート番号は省略可。</p>
+      </div>
+      <div class="note reveal d2">
+        <div class="n">NOTE 03 · VALUE</div>
+        <h4>クリアは空文字で</h4>
+        <p>クラスターをクリアする場合は <code>""</code>（空文字列）を使う。<code>null</code> は指定できない。</p>
+      </div>
+      <div class="note reveal">
+        <div class="n">NOTE 04 · DATE</div>
+        <h4>日付は string で送る</h4>
+        <p>専用型は存在しない。<code>type: "string"</code> で <code>"2025/9/1"</code> のような文字列を送信する。</p>
+      </div>
+      <div class="note reveal d1">
+        <div class="n">NOTE 05 · IMAGE</div>
+        <h4>Base64 プレフィックスは不要</h4>
+        <p><code>data:image/png;base64,</code> は除去して、Base64 文字列のみを <code>value</code> に格納する。</p>
+      </div>
+      <div class="note reveal d2">
+        <div class="n">NOTE 06 · SAMPLE</div>
+        <h4>Node.js サンプル on GitHub</h4>
+        <p><code>i-repo-community / i-reporter-app-interface-nodejs-sample</code> に Node.js サンプルと i-Reporter 帳票定義を公開中。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALIDATOR CTA -->
+<section id="validator" data-screen-label="08 Validator">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 07 — VALIDATION TOOL</span>
+      <div class="eyebrow reveal d1">仕様の自動検証ツール</div>
+      <h2 class="reveal d2">JSON が仕様通りかブラウザで確かめる。</h2>
+    </div>
+
+    <div class="tool reveal d1">
+      <div>
+        <h3>i-Reporter App Interface&nbsp;自動検証ツール</h3>
+        <p>開発した JSON レスポンスが仕様通りになっているかを、ブラウザ上で検証できるツールを用意。貼り付けて押すだけ。</p>
+        <div style="margin-top:32px">
+          <a class="btn" href="https://gwdemo01.conmas-i-reporter.com/i-ReporterAppInterface/" target="_blank" rel="noopener">
+            検証ツールを開く <span class="arr">↗</span>
+          </a>
+        </div>
+      </div>
+      <div class="tool-visual">
+        <div class="line"><span>Schema</span><span>cluster-apply</span></div>
+        <div class="line"><span>Parser</span><span>application/json</span></div>
+        <div class="line"><span>result.code</span><span class="ok">PASS</span></div>
+        <div class="line"><span>apply[].type</span><span class="ok">PASS</span></div>
+        <div class="line"><span>apply[].value</span><span class="ok">PASS</span></div>
+        <div class="line"><span>schema.contract</span><span class="ok">PASS</span></div>
+        <div class="badge">Valid JSON</div>
+      </div>
+    </div>
+  </div>
+</section>
+</deck-stage-disabled>
+<!-- deck-stage disabled, using scroll mode -->
+
+
+<!-- FOOTER -->
+
+
+<script>
+  // Progress bar
+  const bar = document.getElementById('progressBar');
+  const nav = document.getElementById('nav');
+  function onScroll(){
+    if (!bar || !nav) return;
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    const p = max > 0 ? (h.scrollTop / max) * 100 : 0;
+    bar.style.width = p + '%';
+    if (h.scrollTop > 24) nav.classList.add('scrolled'); else nav.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // Reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    }
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Sticky structure stage — highlight step based on scroll progress within the stage
+  const stage = document.getElementById('specStage');
+  const stepsMeta = [
+    {title:'ステータスを返す',    eye:'01 / 05 — result',       desc:'<code style="font-family:var(--mono);color:var(--accent)">result.code</code> は <code style="font-family:var(--mono);color:var(--accent)">0</code> で成功。それ以外の値を返すと、<code style="font-family:var(--mono);color:var(--accent)">description</code> がエラーメッセージとして表示される。'},
+    {title:'apply[] — 反映の配列', eye:'02 / 05 — apply',        desc:'反映したい値を配列として並べる。1つのレスポンスで複数のクラスターを同時に更新できる。'},
+    {title:'item — 任意のアイテム名', eye:'03 / 05 — item',       desc:'任意の識別子。開発者が自由に命名できる。後で検索・デバッグする際の目印になる。'},
+    {title:'sheet / cluster — 反映先', eye:'04 / 05 — location', desc:'どのシートの、どのクラスターに反映するかを指定する。sheet は省略可能（現在のシートに反映）。'},
+    {title:'type / value — データと型', eye:'05 / 05 — payload', desc:'4種類の type（<code style="font-family:var(--mono);color:var(--accent)">string / image / SetFocus / SetItemsToSelect</code>）のいずれかで、value の内容が決まる。'},
+  ];
+  const stageEyebrow = document.getElementById('stageEyebrow');
+  const stageTitle = document.getElementById('stageTitle');
+  const stageDesc = document.getElementById('stageDesc');
+  const structLines = document.querySelectorAll('.struct-line');
+
+  function updateStage(){
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const total = stage.offsetHeight - window.innerHeight;
+    const passed = Math.min(Math.max(-rect.top, 0), total);
+    const p = total > 0 ? passed / total : 0;
+    let step = Math.min(stepsMeta.length - 1, Math.floor(p * stepsMeta.length));
+    // Apply highlights
+    structLines.forEach(line => {
+      const s = parseInt(line.dataset.step,10);
+      if (s === step) line.classList.add('active');
+      else line.classList.remove('active');
+    });
+    const meta = stepsMeta[step];
+    if (stageEyebrow.dataset.step !== String(step)) {
+      stageEyebrow.dataset.step = String(step);
+      stageEyebrow.textContent = meta.eye.toUpperCase();
+      stageTitle.textContent = meta.title;
+      stageDesc.innerHTML = meta.desc;
+    }
+  }
+  window.addEventListener('scroll', updateStage, {passive:true});
+  updateStage();
+
+  // Copy handler code block (clipboard API + fallback)
+  document.querySelectorAll('.code-copy-btn[data-copy-target]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-copy-target');
+      const el = id ? document.getElementById(id) : null;
+      const text = el ? el.textContent : '';
+      if (!text) return;
+      const label = btn.textContent;
+      const done = () => {
+        btn.textContent = 'コピーしました';
+        setTimeout(() => { btn.textContent = label; }, 2000);
+      };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          done();
+        } else throw new Error('no clipboard');
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          done();
+        } finally {
+          document.body.removeChild(ta);
+        }
+      }
+    });
+  });
+
+  // Flow nodes sequential highlight
+  const flowNodes = document.querySelectorAll('.flow-node[data-flow]');
+  let flowIdx = 0;
+  setInterval(() => {
+    flowNodes.forEach(n => n.classList.remove('active'));
+    const target = document.querySelector(`.flow-node[data-flow="${flowIdx}"]`);
+    if (target) target.classList.add('active');
+    flowIdx = (flowIdx + 1) % 3;
+  }, 1400);
+</script>
+</body>
+</html>
