@@ -792,143 +792,7 @@
   </div>
 </section>
 
-<!-- STACK -->
-<section id="stack" data-screen-label="09 Stack" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="container">
-    <div class="sec-head">
-      <span class="sec-num reveal">§ 07 — TODAY'S STACK</span>
-      <div class="eyebrow reveal d1">今回の構成（技術スタック）</div>
-      <h2 class="reveal d2">今回は、AWS Lambda のご紹介</h2>
-      <p class="lead reveal d3" style="margin-top:24px">
-        <strong>CDK は使いません。</strong>コンソールなど最短の手順で関数を立ち上げ、<strong>Lambda の簡単さ</strong>（呼ばれたときだけ動き、JSON を返せばよい）をまず体感してもらいます。
-    </div>
-    <div class="stack-grid">
-      <div class="stack-card reveal">
-        <div class="stack-no">LAYER 01</div>
-        <div class="stack-name">AWS Lambda</div>
-        <p>i-Reporter からのリクエストを受けて、JSON を返す関数。</p>
-      </div>
-      <div class="stack-card reveal d1">
-        <div class="stack-no">LAYER 02</div>
-        <div class="stack-name">API Gateway</div>
-        <p>HTTPS の URL を用意し、Lambda に届ける窓口。まずはここまでつなげば、i-Reporter から叩けます。</p>
-      </div>
-    </div>
 
-    <div class="cdk-note cdk-note--handler reveal d1">
-      <div class="cdk-left">
-        <div class="eyebrow">Lambda でやること</div>
-        <h3>リクエストを受けて決まった形の JSON を返す。</h3>
-        </div>
-      <div class="cdk-code">
-        <div class="code-head">
-          <div class="code-head-left">
-            <div class="dots"><i></i><i></i><i></i></div>
-            <div class="lang">index.mjs（ハンドラー一式）</div>
-          </div>
-          <button type="button" class="code-copy-btn" data-copy-target="lambda-handler-code" aria-label="コードをクリップボードにコピー">コピー</button>
-        </div>
-<pre class="code-body code-body--hi"><code id="lambda-handler-code"><span class="hi-cm">/**
- * i-Reporter App Interface 向けの最小レスポンス例。
- * シート1・クラスター1 に「ハロー」を書き込む JSON を返します。
- *
- * Lambda コンソールの既定テンプレに近い export const handler 形式。
- * API Gateway（Lambda プロキシ統合）から呼ばれる想定。
- */</span>
-<span class="hi-kw">export</span> <span class="hi-kw">const</span> <span class="hi-fn">handler</span> <span class="hi-op">=</span> <span class="hi-kw">async</span> <span class="hi-punct">(</span><span class="hi-param">event</span><span class="hi-punct">)</span> <span class="hi-op">=&gt;</span> <span class="hi-punct">{</span>
-  <span class="hi-cm-line">// TODO: 必要なら event をログ</span>
-  <span class="hi-cm-line">// console.log(JSON.stringify(event, null, 2));</span>
-
-  <span class="hi-kw">const</span> <span class="hi-param">appInterfaceResponse</span> <span class="hi-op">=</span> <span class="hi-punct">{</span>
-    <span class="hi-key">result</span><span class="hi-punct">: {</span>
-      <span class="hi-key">code</span><span class="hi-punct">:</span> <span class="hi-num">0</span><span class="hi-punct">,</span>
-      <span class="hi-key">description</span><span class="hi-punct">:</span> <span class="hi-str">"OK"</span><span class="hi-punct">,</span>
-    <span class="hi-punct">},</span>
-    <span class="hi-key">apply</span><span class="hi-punct">: [</span>
-      <span class="hi-punct">{</span>
-        <span class="hi-key">sheet</span><span class="hi-punct">:</span> <span class="hi-num">1</span><span class="hi-punct">,</span>
-        <span class="hi-key">cluster</span><span class="hi-punct">:</span> <span class="hi-num">1</span><span class="hi-punct">,</span>
-        <span class="hi-key">type</span><span class="hi-punct">:</span> <span class="hi-str">"string"</span><span class="hi-punct">,</span>
-        <span class="hi-key">value</span><span class="hi-punct">:</span> <span class="hi-str">"ハロー"</span><span class="hi-punct">,</span>
-      <span class="hi-punct">},</span>
-    <span class="hi-punct">],</span>
-  <span class="hi-punct">};</span>
-
-  <span class="hi-kw">const</span> <span class="hi-param">response</span> <span class="hi-op">=</span> <span class="hi-punct">{</span>
-    <span class="hi-key">statusCode</span><span class="hi-punct">:</span> <span class="hi-num">200</span><span class="hi-punct">,</span>
-    <span class="hi-key">headers</span><span class="hi-punct">: {</span>
-      <span class="hi-str">"Content-Type"</span><span class="hi-punct">:</span> <span class="hi-str">"application/json; charset=utf-8"</span><span class="hi-punct">,</span>
-      <span class="hi-str">"Access-Control-Allow-Origin"</span><span class="hi-punct">:</span> <span class="hi-str">"*"</span><span class="hi-punct">,</span>
-    <span class="hi-punct">},</span>
-    <span class="hi-key">body</span><span class="hi-punct">:</span> <span class="hi-bi">JSON</span><span class="hi-punct">.</span><span class="hi-fn">stringify</span><span class="hi-punct">(</span><span class="hi-param">appInterfaceResponse</span><span class="hi-punct">),</span>
-  <span class="hi-punct">};</span>
-  <span class="hi-kw">return</span> <span class="hi-param">response</span><span class="hi-punct">;</span>
-<span class="hi-punct">};</span>
-</code></pre>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- FaaS -->
-<section id="faas" data-screen-label="07 FaaS Fit" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
-  <div class="container">
-    <div class="sec-head">
-      <span class="sec-num reveal">§ 05 — FaaS FIT</span>
-      <div class="eyebrow reveal d1">FaaS との相性</div>
-      <h2 class="reveal d2">FaaSと、本当に相性がいいんです。</h2>
-    </div>
-    <div class="faas-grid">
-      <div class="faas-logos reveal">
-        <div class="f-logo"><span class="name">AWS Lambda</span><span class="tag">Event-driven</span></div>
-        <div class="f-logo"><span class="name">Azure Functions</span><span class="tag">Lightweight</span></div>
-      </div>
-      <div class="faas-why reveal d1">
-        <h3>なぜ相性が良いのか</h3>
-        <ul class="why-list">
-          <li><span class="k">01</span><div><strong>JSON 入出力中心</strong><p>リクエスト・レスポンスとも JSON。FaaS の最も得意な形。</p></div></li>
-          <li><span class="k">02</span><div><strong>処理がシンプル</strong><p>短い関数 1つで完結できる。コールドスタートが問題になりにくい。</p></div></li>
-          <li><span class="k">03</span><div><strong>API 化しやすい</strong><p>API Gateway と組み合わせれば、そのまま公開エンドポイントに。</p></div></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- ngrok -->
-<section id="ngrok" data-screen-label="08 ngrok">
-  <div class="container">
-    <div class="sec-head">
-      <span class="sec-num reveal">§ 06 — DEV TIP</span>
-      <div class="eyebrow reveal d1">開発のハードルを下げる工夫</div>
-      <h2 class="reveal d2">iPhoneやiPadからの実機テスト、どうしていますか？</h2>
-    </div>
-    <div class="ngrok">
-      <div class="ngrok-before reveal">
-        <div class="tag">Before</div>
-        <h4>localhost 問題</h4>
-        <p>iPhone や iPad で動作確認するとき、<code>localhost</code> は当然届かない。そのたびに仮デプロイするのは面倒…。</p>
-        <div class="term">
-          <div class="t-line"><span class="p">iPad ⇢</span> <span class="err">ERR_CONNECTION_REFUSED</span></div>
-          <div class="t-line"><span class="p">http://localhost:3000</span></div>
-          <div class="t-line"><span class="d">(実機からは届かない)</span></div>
-        </div>
-      </div>
-      <div class="ngrok-arrow reveal d1">
-        <div class="arrow-body"></div>
-        <span class="arrow-label">ngrok</span>
-      </div>
-      <div class="ngrok-after reveal d2">
-        <div class="tag on">After</div>
-        <h4>ローカルを外部公開</h4>
-        <p>ngrok でローカルを一時的に外部公開。iPhone からも URL 一発でテストできる。</p>
-        <div class="term on">
-          <div class="t-line"><span class="p">iPad ⇢</span> <span class="ok">200 OK</span></div>
-          <div class="t-line"><span class="p">https://a1b2c3.ngrok.app</span></div>
-          <div class="t-line"><span class="d">→ localhost:3000</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 <!-- OVERVIEW -->
 <section id="overview" data-screen-label="02 Overview">
   <div class="container">
@@ -1392,7 +1256,143 @@
     </div>
   </div>
 </section>
+<!-- STACK -->
+<section id="stack" data-screen-label="09 Stack" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 07 — TODAY'S STACK</span>
+      <div class="eyebrow reveal d1">今回の構成（技術スタック）</div>
+      <h2 class="reveal d2">今回は、AWS Lambda のご紹介</h2>
+      <p class="lead reveal d3" style="margin-top:24px">
+        <strong>CDK は使いません。</strong>コンソールなど最短の手順で関数を立ち上げ、<strong>Lambda の簡単さ</strong>（呼ばれたときだけ動き、JSON を返せばよい）をまず体感してもらいます。
+    </div>
+    <div class="stack-grid">
+      <div class="stack-card reveal">
+        <div class="stack-no">LAYER 01</div>
+        <div class="stack-name">AWS Lambda</div>
+        <p>i-Reporter からのリクエストを受けて、JSON を返す関数。</p>
+      </div>
+      <div class="stack-card reveal d1">
+        <div class="stack-no">LAYER 02</div>
+        <div class="stack-name">API Gateway</div>
+        <p>HTTPS の URL を用意し、Lambda に届ける窓口。まずはここまでつなげば、i-Reporter から叩けます。</p>
+      </div>
+    </div>
 
+    <div class="cdk-note cdk-note--handler reveal d1">
+      <div class="cdk-left">
+        <div class="eyebrow">Lambda でやること</div>
+        <h3>リクエストを受けて決まった形の JSON を返す。</h3>
+        </div>
+      <div class="cdk-code">
+        <div class="code-head">
+          <div class="code-head-left">
+            <div class="dots"><i></i><i></i><i></i></div>
+            <div class="lang">index.mjs（ハンドラー一式）</div>
+          </div>
+          <button type="button" class="code-copy-btn" data-copy-target="lambda-handler-code" aria-label="コードをクリップボードにコピー">コピー</button>
+        </div>
+<pre class="code-body code-body--hi"><code id="lambda-handler-code"><span class="hi-cm">/**
+ * i-Reporter App Interface 向けの最小レスポンス例。
+ * シート1・クラスター1 に「ハロー」を書き込む JSON を返します。
+ *
+ * Lambda コンソールの既定テンプレに近い export const handler 形式。
+ * API Gateway（Lambda プロキシ統合）から呼ばれる想定。
+ */</span>
+<span class="hi-kw">export</span> <span class="hi-kw">const</span> <span class="hi-fn">handler</span> <span class="hi-op">=</span> <span class="hi-kw">async</span> <span class="hi-punct">(</span><span class="hi-param">event</span><span class="hi-punct">)</span> <span class="hi-op">=&gt;</span> <span class="hi-punct">{</span>
+  <span class="hi-cm-line">// TODO: 必要なら event をログ</span>
+  <span class="hi-cm-line">// console.log(JSON.stringify(event, null, 2));</span>
+
+  <span class="hi-kw">const</span> <span class="hi-param">appInterfaceResponse</span> <span class="hi-op">=</span> <span class="hi-punct">{</span>
+    <span class="hi-key">result</span><span class="hi-punct">: {</span>
+      <span class="hi-key">code</span><span class="hi-punct">:</span> <span class="hi-num">0</span><span class="hi-punct">,</span>
+      <span class="hi-key">description</span><span class="hi-punct">:</span> <span class="hi-str">"OK"</span><span class="hi-punct">,</span>
+    <span class="hi-punct">},</span>
+    <span class="hi-key">apply</span><span class="hi-punct">: [</span>
+      <span class="hi-punct">{</span>
+        <span class="hi-key">sheet</span><span class="hi-punct">:</span> <span class="hi-num">1</span><span class="hi-punct">,</span>
+        <span class="hi-key">cluster</span><span class="hi-punct">:</span> <span class="hi-num">1</span><span class="hi-punct">,</span>
+        <span class="hi-key">type</span><span class="hi-punct">:</span> <span class="hi-str">"string"</span><span class="hi-punct">,</span>
+        <span class="hi-key">value</span><span class="hi-punct">:</span> <span class="hi-str">"ハロー"</span><span class="hi-punct">,</span>
+      <span class="hi-punct">},</span>
+    <span class="hi-punct">],</span>
+  <span class="hi-punct">};</span>
+
+  <span class="hi-kw">const</span> <span class="hi-param">response</span> <span class="hi-op">=</span> <span class="hi-punct">{</span>
+    <span class="hi-key">statusCode</span><span class="hi-punct">:</span> <span class="hi-num">200</span><span class="hi-punct">,</span>
+    <span class="hi-key">headers</span><span class="hi-punct">: {</span>
+      <span class="hi-str">"Content-Type"</span><span class="hi-punct">:</span> <span class="hi-str">"application/json; charset=utf-8"</span><span class="hi-punct">,</span>
+      <span class="hi-str">"Access-Control-Allow-Origin"</span><span class="hi-punct">:</span> <span class="hi-str">"*"</span><span class="hi-punct">,</span>
+    <span class="hi-punct">},</span>
+    <span class="hi-key">body</span><span class="hi-punct">:</span> <span class="hi-bi">JSON</span><span class="hi-punct">.</span><span class="hi-fn">stringify</span><span class="hi-punct">(</span><span class="hi-param">appInterfaceResponse</span><span class="hi-punct">),</span>
+  <span class="hi-punct">};</span>
+  <span class="hi-kw">return</span> <span class="hi-param">response</span><span class="hi-punct">;</span>
+<span class="hi-punct">};</span>
+</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- FaaS -->
+<section id="faas" data-screen-label="07 FaaS Fit" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 05 — FaaS FIT</span>
+      <div class="eyebrow reveal d1">FaaS との相性</div>
+      <h2 class="reveal d2">FaaSと、本当に相性がいいんです。</h2>
+    </div>
+    <div class="faas-grid">
+      <div class="faas-logos reveal">
+        <div class="f-logo"><span class="name">AWS Lambda</span><span class="tag">Event-driven</span></div>
+        <div class="f-logo"><span class="name">Azure Functions</span><span class="tag">Lightweight</span></div>
+      </div>
+      <div class="faas-why reveal d1">
+        <h3>なぜ相性が良いのか</h3>
+        <ul class="why-list">
+          <li><span class="k">01</span><div><strong>JSON 入出力中心</strong><p>リクエスト・レスポンスとも JSON。FaaS の最も得意な形。</p></div></li>
+          <li><span class="k">02</span><div><strong>処理がシンプル</strong><p>短い関数 1つで完結できる。コールドスタートが問題になりにくい。</p></div></li>
+          <li><span class="k">03</span><div><strong>API 化しやすい</strong><p>API Gateway と組み合わせれば、そのまま公開エンドポイントに。</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ngrok -->
+<section id="ngrok" data-screen-label="08 ngrok">
+  <div class="container">
+    <div class="sec-head">
+      <span class="sec-num reveal">§ 06 — DEV TIP</span>
+      <div class="eyebrow reveal d1">開発のハードルを下げる工夫</div>
+      <h2 class="reveal d2">iPhoneやiPadからの実機テスト、どうしていますか？</h2>
+    </div>
+    <div class="ngrok">
+      <div class="ngrok-before reveal">
+        <div class="tag">Before</div>
+        <h4>localhost 問題</h4>
+        <p>iPhone や iPad で動作確認するとき、<code>localhost</code> は当然届かない。そのたびに仮デプロイするのは面倒…。</p>
+        <div class="term">
+          <div class="t-line"><span class="p">iPad ⇢</span> <span class="err">ERR_CONNECTION_REFUSED</span></div>
+          <div class="t-line"><span class="p">http://localhost:3000</span></div>
+          <div class="t-line"><span class="d">(実機からは届かない)</span></div>
+        </div>
+      </div>
+      <div class="ngrok-arrow reveal d1">
+        <div class="arrow-body"></div>
+        <span class="arrow-label">ngrok</span>
+      </div>
+      <div class="ngrok-after reveal d2">
+        <div class="tag on">After</div>
+        <h4>ローカルを外部公開</h4>
+        <p>ngrok でローカルを一時的に外部公開。iPhone からも URL 一発でテストできる。</p>
+        <div class="term on">
+          <div class="t-line"><span class="p">iPad ⇢</span> <span class="ok">200 OK</span></div>
+          <div class="t-line"><span class="p">https://a1b2c3.ngrok.app</span></div>
+          <div class="t-line"><span class="d">→ localhost:3000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 <!-- VALIDATOR CTA -->
 <section id="validator" data-screen-label="08 Validator">
   <div class="container">
